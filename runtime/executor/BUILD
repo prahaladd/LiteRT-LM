@@ -544,6 +544,7 @@ cc_library(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@litert//litert/c:litert_layout",
+        "//runtime/util:litert_status_util",
     ] + select({
         "@litert//litert:litert_link_capi_so": [
             "@litert//litert/cc:litert_api_with_dynamic_runtime",
@@ -567,6 +568,7 @@ cc_test(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
+        "//runtime/util:litert_status_util",
     ] + select({
         "@litert//litert:litert_link_capi_so": [
             "@litert//litert/cc:litert_api_with_dynamic_runtime",

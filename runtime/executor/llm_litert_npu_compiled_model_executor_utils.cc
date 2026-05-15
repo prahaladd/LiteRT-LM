@@ -43,6 +43,7 @@
 #include "litert/cc/litert_macros.h"  // from @litert
 #include "litert/cc/litert_ranked_tensor_type.h"  // from @litert
 #include "litert/cc/litert_tensor_buffer.h"  // from @litert
+#include "runtime/util/status_macros.h"
 
 namespace litert::lm {
 
@@ -933,6 +934,49 @@ absl::Status HWPerLayerEmbeddingLookup(
       }
     }
   }
+  return absl::OkStatus();
+}
+
+absl::Status DequantizeLogits(const ::litert::TensorBuffer& src,
+                              ::litert::TensorBuffer& dst, float scale,
+                              int32_t zero_point, bool should_dump) {
+  LITERT_ASSIGN_OR_RETURN(auto src_type, src.TensorType());
+  LITERT_ASSIGN_OR_RETURN(auto dst_type, dst.TensorType());
+  RET_CHECK_EQ((int)dst_type.ElementType(),
+               (int)::litert::ElementType::Float32);
+
+  LITERT_ASSIGN_OR_RETURN(size_t num_elements, src_type.Layout().NumElements());
+
+  const auto src_elem_type = src_type.ElementType();
+
+  LITERT_ASSIGN_OR_RETURN(auto src_lock,
+                          ::litert::TensorBufferScopedLock::Create(
+                              const_cast<::litert::TensorBuffer&>(src),
+                              ::litert::TensorBuffer::LockMode::kRead));
+  LITERT_ASSIGN_OR_RETURN(auto dst_lock,
+                          ::litert::TensorBufferScopedLock::Create(
+                              dst, ::litert::TensorBuffer::LockMode::kWrite));
+
+  float* dst_ptr = static_cast<float*>(dst_lock.second);
+  const void* src_raw_ptr = src_lock.second;
+
+  if (src_elem_type == ::litert::ElementType::Int16) {
+    const int16_t* src_ptr = static_cast<const int16_t*>(src_raw_ptr);
+    for (size_t i = 0; i < num_elements; ++i) {
+      dst_ptr[i] = scale * (static_cast<float>(src_ptr[i]) -
+                            static_cast<float>(zero_point));
+    }
+  } else if (src_elem_type == ::litert::ElementType::Int8) {
+    const int8_t* src_ptr = static_cast<const int8_t*>(src_raw_ptr);
+    for (size_t i = 0; i < num_elements; ++i) {
+      dst_ptr[i] = scale * (static_cast<float>(src_ptr[i]) -
+                            static_cast<float>(zero_point));
+    }
+  } else {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Unsupported source type for dequantization: ", (int)src_elem_type));
+  }
+
   return absl::OkStatus();
 }
 

@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "absl/container/flat_hash_map.h"  // from @com_google_absl
 #include "absl/status/statusor.h"  // from @com_google_absl
@@ -1008,6 +1009,52 @@ TEST_F(ExecutorUtilsTest, HWMaskUpdateBFloat16) {
     } else {
       EXPECT_EQ(global_lock.second[k], masked_val) << "k=" << k;
     }
+  }
+}
+
+TEST_F(ExecutorUtilsTest, DequantizeLogitsInt16) {
+  std::vector<int16_t> quantized_data = {100, 200, -100, -200};
+  float scale = 0.5f;
+  int32_t zero_point = 10;
+
+  TensorBuffer src = CreateTensorBuffer(quantized_data, ElementType::Int16);
+  TensorBuffer dst =
+      CreateTensorBuffer(std::vector<float>(4, 0.0f), ElementType::Float32);
+
+  ASSERT_TRUE(DequantizeLogits(src, dst, scale, zero_point, false).ok());
+
+  auto lock_expected =
+      TensorBufferScopedLock::Create<float>(dst, TensorBuffer::LockMode::kRead);
+  ASSERT_TRUE(lock_expected.HasValue());
+  auto& lock = *lock_expected;
+
+  for (size_t i = 0; i < quantized_data.size(); ++i) {
+    float expected =
+        scale * (static_cast<float>(quantized_data[i]) - zero_point);
+    EXPECT_NEAR(lock.second[i], expected, 1e-5);
+  }
+}
+
+TEST_F(ExecutorUtilsTest, DequantizeLogitsInt8) {
+  std::vector<int8_t> quantized_data = {10, 20, -10, -20};
+  float scale = 0.25f;
+  int32_t zero_point = -5;
+
+  TensorBuffer src = CreateTensorBuffer(quantized_data, ElementType::Int8);
+  TensorBuffer dst =
+      CreateTensorBuffer(std::vector<float>(4, 0.0f), ElementType::Float32);
+
+  ASSERT_TRUE(DequantizeLogits(src, dst, scale, zero_point, false).ok());
+
+  auto lock_expected =
+      TensorBufferScopedLock::Create<float>(dst, TensorBuffer::LockMode::kRead);
+  ASSERT_TRUE(lock_expected.HasValue());
+  auto& lock = *lock_expected;
+
+  for (size_t i = 0; i < quantized_data.size(); ++i) {
+    float expected =
+        scale * (static_cast<float>(quantized_data[i]) - zero_point);
+    EXPECT_NEAR(lock.second[i], expected, 1e-5);
   }
 }
 

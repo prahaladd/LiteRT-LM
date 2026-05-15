@@ -114,6 +114,12 @@ class LlmLiteRtNpuCompiledModelExecutor : public LlmExecutor {
   absl::StatusOr<std::vector<std::vector<int>>> Decode(
       const ExecutorDecodeParams& decode_params) override;
 
+  absl::StatusOr<::litert::TensorBuffer> DecodeLogits(
+      const ExecutorInputs& inputs) override;
+
+  absl::StatusOr<::litert::TensorBuffer> DecodeLogits(
+      const ExecutorInputs& inputs, const ExecutorDecodeParams& decode_params);
+
   absl::string_view ExecutorBackendName() const override {
     return "LiteRT NPU Compiled Model";
   }
@@ -653,6 +659,10 @@ class LlmLiteRtNpuCompiledModelExecutor : public LlmExecutor {
   // The processed tokens.  This is also used to store the pending input token
   // for next prefill or decode steps.
   litert::lm::ProcessedTokens processed_tokens_;
+
+  // Tracks whether a decode step was run so we know how to update constrained
+  // decoding state.
+  bool ran_decode_ = false;
 };
 
 std::ostream& operator<<(

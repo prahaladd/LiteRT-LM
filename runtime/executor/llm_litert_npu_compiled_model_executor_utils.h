@@ -116,6 +116,11 @@ absl::Status HWPerLayerEmbeddingLookup(
     void* output_buffer, litert::ElementType output_type,
     float final_scale = 1.0f, int32_t final_zero_point = 0);
 
+// Dequantize logits to float32.
+absl::Status DequantizeLogits(const ::litert::TensorBuffer& src,
+                              ::litert::TensorBuffer& dst, float scale,
+                              int32_t zero_point, bool should_dump);
+
 }  // namespace litert::lm
 
 #endif  // THIRD_PARTY_ODML_LITERT_LM_RUNTIME_EXECUTOR_LLM_LITERT_NPU_COMPILED_MODEL_EXECUTOR_UTILS_H_

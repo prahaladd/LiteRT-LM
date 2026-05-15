@@ -281,52 +281,6 @@ litert::Expected<bool> HasPerLayerEmbedder(
   return false;
 }
 
-// Dequantize logits to float32.
-// This is required because `DecodeToLogits` must return float logits to the
-// caller, but NPU models may return quantized logits.
-absl::Status DequantizeLogits(const ::litert::TensorBuffer& src,
-                              ::litert::TensorBuffer& dst, float scale,
-                              int32_t zero_point, bool should_dump) {
-  LITERT_ASSIGN_OR_RETURN(auto src_type, src.TensorType());
-  LITERT_ASSIGN_OR_RETURN(auto dst_type, dst.TensorType());
-  RET_CHECK_EQ((int)dst_type.ElementType(),
-               (int)::litert::ElementType::Float32);
-
-  LITERT_ASSIGN_OR_RETURN(size_t num_elements, src_type.Layout().NumElements());
-
-  const auto src_elem_type = src_type.ElementType();
-
-  LITERT_ASSIGN_OR_RETURN(auto src_lock,
-                          ::litert::TensorBufferScopedLock::Create(
-                              const_cast<::litert::TensorBuffer&>(src),
-                              ::litert::TensorBuffer::LockMode::kRead));
-  LITERT_ASSIGN_OR_RETURN(auto dst_lock,
-                          ::litert::TensorBufferScopedLock::Create(
-                              dst, ::litert::TensorBuffer::LockMode::kWrite));
-
-  float* dst_ptr = static_cast<float*>(dst_lock.second);
-  const void* src_raw_ptr = src_lock.second;
-
-  if (src_elem_type == ::litert::ElementType::Int16) {
-    const int16_t* src_ptr = static_cast<const int16_t*>(src_raw_ptr);
-    for (size_t i = 0; i < num_elements; ++i) {
-      dst_ptr[i] = scale * (static_cast<float>(src_ptr[i]) -
-                            static_cast<float>(zero_point));
-    }
-  } else if (src_elem_type == ::litert::ElementType::Int8) {
-    const int8_t* src_ptr = static_cast<const int8_t*>(src_raw_ptr);
-    for (size_t i = 0; i < num_elements; ++i) {
-      dst_ptr[i] = scale * (static_cast<float>(src_ptr[i]) -
-                            static_cast<float>(zero_point));
-    }
-  } else {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Unsupported source type for dequantization: ", (int)src_elem_type));
-  }
-
-  return absl::OkStatus();
-}
-
 }  // namespace
 
 std::ostream& operator<<(
@@ -1483,6 +1437,7 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::Prefill(
 
 absl::Status LlmLiteRtNpuCompiledModelExecutor::Prefill(
     const ExecutorInputs& inputs, const ExecutorPrefillParams& params) {
+  ran_decode_ = false;
   auto start = absl::Now();
   LITERT_ASSIGN_OR_RETURN(const auto* text_token_ids,
                           inputs.GetTextTokenIdsPtr());
@@ -1520,6 +1475,88 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::Prefill(
   return absl::OkStatus();
 }
 
+absl::StatusOr<::litert::TensorBuffer>
+LlmLiteRtNpuCompiledModelExecutor::DecodeLogits(const ExecutorInputs& inputs) {
+  return DecodeLogits(inputs, ExecutorDecodeParams());
+}
+
+absl::StatusOr<::litert::TensorBuffer>
+LlmLiteRtNpuCompiledModelExecutor::DecodeLogits(
+    const ExecutorInputs& inputs, const ExecutorDecodeParams& decode_params) {
+
+  if (current_step_ >= executor_settings_.GetMaxNumTokens()) {
+    return absl::ResourceExhaustedError("Reached maximum number of tokens.");
+  }
+
+  if (processed_tokens_.TokenCount() != current_step_) {
+    LITERT_RETURN_IF_ERROR(processed_tokens_.RollBackToStep(current_step_));
+  }
+
+  if (inputs.GetTextDataPtr().ok()) {
+    auto token_ids_buffer = inputs.GetTextTokenIdsPtr();
+    if (token_ids_buffer.ok()) {
+      auto input_tensor_size = (*token_ids_buffer)->PackedSize();
+      if (input_tensor_size && *input_tensor_size != 0) {
+        RET_CHECK_EQ(*input_tensor_size, sizeof(int32_t));
+        LITERT_ASSIGN_OR_RETURN(
+            auto ids, ReferTensorBufferAsSpan<int32_t>(**token_ids_buffer));
+        if (ids[0] >= 0) {
+          processed_tokens_.InvalidatePendingInputToken();
+          std::shared_ptr<TokenData> token =
+              std::make_shared<TokenData>(ids[0]);
+          RETURN_IF_ERROR(processed_tokens_.AddPendingInputToken({token}));
+        }
+      }
+    }
+  }
+
+  auto [internal_start_step, pending_input_token] =
+      processed_tokens_.GetNextUnprocessedToken();
+  if (pending_input_token.empty()) {
+    return absl::InvalidArgumentError("No id available to be decoded.");
+  }
+
+  bool last_run_is_decode = ran_decode_;
+
+  std::shared_ptr<TokenData> token = pending_input_token[0];
+  if (UseEmbeddingLookupManager() && token->embedding().empty()) {
+    RETURN_IF_ERROR(embedding_lookup_manager_->LookupDecode(
+        token->id(), token->mutable_embedding()));
+  }
+
+  RETURN_IF_ERROR(DecodeInternal(internal_start_step, token));
+  RETURN_IF_ERROR(processed_tokens_.MarkPendingInputTokenAsProcessed());
+
+  const auto& src_buffer =
+      llm_inference_context_
+          .decode_output_buffers[LlmSignatures::kDecodeLogitsOutput];
+
+  LITERT_ASSIGN_OR_RETURN(auto vocab_size, GetVocabSize());
+  LITERT_ASSIGN_OR_RETURN(auto output_logits,
+                          CreateTensorBuffer<float>({1, 1, vocab_size}));
+
+  RETURN_IF_ERROR(DequantizeLogits(src_buffer, output_logits,
+                                   per_tensor_logits_scale_,
+                                   per_tensor_logits_zero_point_, false));
+
+  if (decode_params.HasConstraintDecoder()) {
+    std::vector<int> current_token_ids = {token->id()};
+    if (last_run_is_decode) {
+      RETURN_IF_ERROR(
+          decode_params.GetConstraintDecoder()->UpdateConstraintState(
+              absl::MakeSpan(current_token_ids)));
+    }
+
+    RETURN_IF_ERROR(
+        decode_params.GetConstraintDecoder()->MaskLogits(output_logits));
+  }
+
+  current_step_++;
+  ran_decode_ = true;
+
+  return output_logits;
+}
+
 absl::StatusOr<std::vector<std::vector<int>>>
 LlmLiteRtNpuCompiledModelExecutor::Decode() {
   return Decode(ExecutorDecodeParams());
@@ -1529,8 +1566,37 @@ absl::StatusOr<std::vector<std::vector<int>>>
 LlmLiteRtNpuCompiledModelExecutor::Decode(
     const ExecutorDecodeParams& decode_params) {
   if (decode_params.HasConstraintDecoder()) {
-    return absl::UnimplementedError(
-        "Constrained decoding is not supported on NPU.");
+    auto start = absl::Now();
+
+    LITERT_ASSIGN_OR_RETURN(auto masked_logits,
+                            DecodeLogits(ExecutorInputs(), decode_params));
+
+    LITERT_ASSIGN_OR_RETURN(
+        const int max_index,
+        ApplyGreedySampling(masked_logits,
+                            npu_config_.enable_neon_for_npu_greedy_sampling));
+
+    std::shared_ptr<TokenData> last_output_token =
+        std::make_shared<TokenData>(max_index);
+
+    if (UseEmbeddingLookupManager()) {
+      auto start_lookup = absl::Now();
+      RETURN_IF_ERROR(embedding_lookup_manager_->LookupDecode(
+          last_output_token->id(), last_output_token->mutable_embedding()));
+      latency_stats_.decode_embedder_inference_latency_us +=
+          absl::ToInt64Microseconds(absl::Now() - start_lookup);
+    }
+
+    auto start_add = absl::Now();
+    RETURN_IF_ERROR(
+        processed_tokens_.AddPendingInputToken({std::move(last_output_token)}));
+    latency_stats_.decode_token_queue_latency_us +=
+        absl::ToInt64Microseconds(absl::Now() - start_add);
+
+    latency_stats_.decode_e2e_latency_us +=
+        absl::ToInt64Microseconds(absl::Now() - start);
+    latency_stats_.decode_num_tokens++;
+    return std::vector<std::vector<int>>{{max_index}};
   }
   auto start = absl::Now();
 
@@ -2686,6 +2752,7 @@ LlmLiteRtNpuCompiledModelExecutor::GetLatencyStats() const {
 absl::Status LlmLiteRtNpuCompiledModelExecutor::Reset() {
   ABSL_LOG(INFO) << "Custom NPU execution latency stats:\n" << latency_stats_;
   current_step_ = 0;
+  ran_decode_ = false;
   RETURN_IF_ERROR(processed_tokens_.RollBackToStep(0));
   sampled_ids_.clear();
   latency_stats_ = {};
