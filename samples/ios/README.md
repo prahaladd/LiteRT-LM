@@ -14,11 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# LiteRT-LM Swift API Usage for iOS
+# LiteRT-LM Swift API for iOS
 
-This directory contains examples and instructions on how to use the LiteRT-LM
-Swift API to integrate on-device Large Language Models into your iOS
-applications.
+This directory provides examples and instructions for integrating large language
+models natively into iOS applications using the LiteRT-LM Swift API.
 
 ## Prerequisites
 
@@ -30,7 +29,8 @@ applications.
 
 ### 1. Add Dependency
 
-Add the LiteRT-LM package to your Xcode project using Swift Package Manager:
+Follow these steps to add the LiteRTLM Swift package to your Xcode project using
+Swift Package Manager (SPM):
 
 1. In Xcode, select **File** > **Add Package Dependencies...**
 2. In the search bar at the top right, enter the GitHub repository URL:
@@ -38,9 +38,20 @@ Add the LiteRT-LM package to your Xcode project using Swift Package Manager:
 3. Select the package from the list and click **Add Package**.
 4. Select the target app you want to add the dependency to and click **Finish**.
 
+> [!NOTE]
+> If you see an error like `no such module LiteRTLM` after adding the package:
+> 1. Click on your project in the project navigator.
+> 2. Select your app target.
+> 3. Go to the **General** tab.
+> 4. Scroll down to **Frameworks, Libraries, and Embedded Content**.
+> 5. Click the **`+`** button.
+> 6. Select **LiteRTLM Package** -> **LiteRTLM**.
+> 7. Click **Add**.
+
 ### 2. Add a Model File
 
-1. Obtain a compatible `.litertlm` model file.
+1. Obtain a compatible `.litertlm` model file (e.g., **Gemma 4 E2B** from
+   [Hugging Face](https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm)).
 2. Drag and drop the model file into your Xcode project navigator. In the
    dialog that appears, ensure your app target is checked.
 3. *(Alternative)* If the file is not found at runtime, go to your project's
@@ -49,9 +60,10 @@ Add the LiteRT-LM package to your Xcode project using Swift Package Manager:
 
 ### 3. Usage Example
 
-Simple example of a SwiftUI chat application using streaming responses is
-available in the [ContentView.swift](ContentView.swift) file in this
-directory.
+A simple example of a SwiftUI chat application using streaming responses is
+available in the [devsite Swift documentation][devsite-url].
+
+[devsite-url]: https://ai.google.dev/edge/litert-lm/swift
 
 It demonstrates how to:
 
@@ -60,28 +72,6 @@ It demonstrates how to:
 - Create a `Conversation` session.
 - Send a message and handle the streaming response live in the UI.
 
-## GPU Acceleration (Optional)
-
-To get the best performance on supported iOS devices using the **dynamically
-linked C API**, you can enable GPU acceleration:
-
-1. Ensure your `EngineConfig` uses `backend: .gpu`.
-2. You must also include the following dynamic libraries in your app bundle for
-   full GPU support:
-   - `libLiteRtTopKMetalSampler.dylib` (if your model requires TopK sampling on GPU).
-   - `libLiteRtMetalAccelerator.dylib` (for Metal GPU acceleration).
-   **Steps to add the libraries**:
-   - Copy the `.dylib` files to your local **Desktop**.
-   - In Xcode, go to your project's **Build Phases** tab.
-   - Click the **`+`** button at the top left of the Build Phases area and
-     select **New Copy Files Phase**.
-   - Set the **Destination** to **Frameworks** and leave the subpath empty.
-   - Click the **`+`** button at the bottom of the new Copy Files section.
-   - Click **Add Other...** and navigate to your **Desktop**.
-   - Select `libLiteRtTopKMetalSampler.dylib` and add it.
-   - Click the **`+`** button again to add `libLiteRtMetalAccelerator.dylib`
-     in the same way.
-
 ## Running the App
 
 1. Connect your physical iPhone to your Mac using a cable.
@@ -89,3 +79,9 @@ linked C API**, you can enable GPU acceleration:
    top center of the window.
 3. Click the **Run** button (or press `Cmd + R`) to build and run the app on
    your device!
+
+> [!TIP]
+> If your physical device's iOS version is lower than the deployment target set
+> in Xcode, you can change it by going to the **General** tab, and under
+> **Minimum Deployments** (or **Deployment Info**), change the iOS version to
+> match your device's version.
