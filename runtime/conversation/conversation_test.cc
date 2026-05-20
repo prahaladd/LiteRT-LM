@@ -100,7 +100,7 @@ std::string ReadFile(absl::string_view path) {
   return contents.str();
 }
 
-class MockSession : public Engine::Session {
+class MockSession : public SessionInterface {
  public:
   MOCK_METHOD(absl::StatusOr<Responses>, GenerateContent,
               (const std::vector<InputData>& contents), (override));
@@ -119,7 +119,7 @@ class MockSession : public Engine::Session {
               (const std::vector<absl::string_view>& target_text,
                bool store_token_lengths),
               (override));
-  MOCK_METHOD(absl::StatusOr<std::unique_ptr<Engine::Session::TaskController>>,
+  MOCK_METHOD(absl::StatusOr<std::unique_ptr<SessionInterface::TaskController>>,
               RunTextScoringAsync,
               (const std::vector<absl::string_view>& target_text,
                absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback,
@@ -129,7 +129,7 @@ class MockSession : public Engine::Session {
   MOCK_METHOD(absl::Status, RunPrefill,
               (const std::vector<InputData>& contents), (override));
   MOCK_METHOD(
-      absl::StatusOr<std::unique_ptr<Engine::Session::TaskController>>,
+      absl::StatusOr<std::unique_ptr<SessionInterface::TaskController>>,
       RunPrefillAsync,
       (const std::vector<InputData>& contents,
        absl::AnyInvocable<void(absl::StatusOr<Responses>)> user_callback),
@@ -138,18 +138,19 @@ class MockSession : public Engine::Session {
   MOCK_METHOD(absl::StatusOr<Responses>, RunDecode,
               (const DecodeConfig& decode_config), (override));
   MOCK_METHOD(
-      absl::StatusOr<std::unique_ptr<Engine::Session::TaskController>>,
+      absl::StatusOr<std::unique_ptr<SessionInterface::TaskController>>,
       RunDecodeAsync,
       (absl::AnyInvocable<void(absl::StatusOr<Responses>)> user_callback),
       (override));
   MOCK_METHOD(
-      absl::StatusOr<std::unique_ptr<Engine::Session::TaskController>>,
+      absl::StatusOr<std::unique_ptr<SessionInterface::TaskController>>,
       RunDecodeAsync,
       (absl::AnyInvocable<void(absl::StatusOr<Responses>)> user_callback,
        const DecodeConfig& decode_config),
       (override));
-  MOCK_METHOD(absl::StatusOr<std::unique_ptr<Session>>, Clone, (), (override));
-  MOCK_METHOD(absl::StatusOr<std::unique_ptr<Session>>, CloneAsync,
+  MOCK_METHOD(absl::StatusOr<std::unique_ptr<SessionInterface>>, Clone, (),
+              (override));
+  MOCK_METHOD(absl::StatusOr<std::unique_ptr<SessionInterface>>, CloneAsync,
               (absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback),
               (override));
   MOCK_METHOD(absl::StatusOr<BenchmarkInfo>, GetBenchmarkInfo, (), (override));
@@ -172,13 +173,13 @@ class MockEngine : public Engine {
               GetAudioExecutorProperties, (), (const, override));
   MOCK_METHOD(absl::StatusOr<VisionExecutorProperties>,
               GetVisionExecutorProperties, (), (const, override));
-  MOCK_METHOD(absl::StatusOr<std::unique_ptr<Session>>, CreateSession,
+  MOCK_METHOD(absl::StatusOr<std::unique_ptr<SessionInterface>>, CreateSession,
               (const SessionConfig& session_config), (override));
   MOCK_METHOD(absl::Status, WaitUntilDone, (absl::Duration timeout),
               (override));
 };
 
-class MockTaskController : public Engine::Session::TaskController {
+class MockTaskController : public SessionInterface::TaskController {
  public:
   MockTaskController() = default;
   ~MockTaskController() override = default;
@@ -2998,7 +2999,7 @@ TEST(AppendMessageTest, Gemma4Sync) {
   ASSERT_OK_AND_ASSIGN(auto model_assets,
                        ModelAssets::Create(GetTestdataPath(kTestLlmPath)));
   ASSERT_OK_AND_ASSIGN(auto engine_settings, EngineSettings::CreateDefault(
-                                                  model_assets, Backend::CPU));
+                                                 model_assets, Backend::CPU));
   EXPECT_CALL(*mock_engine, GetEngineSettings())
       .WillRepeatedly(testing::ReturnRef(engine_settings));
 
@@ -3025,7 +3026,7 @@ TEST(AppendMessageTest, Gemma4Sync) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_1))),
+                                            expected_prefill_1))),
                       testing::_))
       .Times(1)
       .WillOnce([](const std::vector<InputData>& contents,
@@ -3044,7 +3045,7 @@ TEST(AppendMessageTest, Gemma4Sync) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_2))),
+                                            expected_prefill_2))),
                       testing::_))
       .Times(1)
       .WillOnce([](const std::vector<InputData>& contents,
@@ -3063,7 +3064,7 @@ TEST(AppendMessageTest, Gemma4Sync) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_3))),
+                                            expected_prefill_3))),
                       testing::_))
       .Times(1)
       .WillOnce([](const std::vector<InputData>& contents,
@@ -3083,7 +3084,7 @@ TEST(AppendMessageTest, Gemma4Sync) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_4))),
+                                            expected_prefill_4))),
                       testing::_))
       .Times(1)
       .WillOnce([](const std::vector<InputData>& contents,
@@ -3132,7 +3133,7 @@ TEST(AppendMessageTest, Gemma4Async) {
   ASSERT_OK_AND_ASSIGN(auto model_assets,
                        ModelAssets::Create(GetTestdataPath(kTestLlmPath)));
   ASSERT_OK_AND_ASSIGN(auto engine_settings, EngineSettings::CreateDefault(
-                                                  model_assets, Backend::CPU));
+                                                 model_assets, Backend::CPU));
   EXPECT_CALL(*mock_engine, GetEngineSettings())
       .WillRepeatedly(testing::ReturnRef(engine_settings));
 
@@ -3161,7 +3162,7 @@ TEST(AppendMessageTest, Gemma4Async) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_1))),
+                                            expected_prefill_1))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3178,7 +3179,7 @@ TEST(AppendMessageTest, Gemma4Async) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_2))),
+                                            expected_prefill_2))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3195,7 +3196,7 @@ TEST(AppendMessageTest, Gemma4Async) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_3))),
+                                            expected_prefill_3))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3212,7 +3213,7 @@ TEST(AppendMessageTest, Gemma4Async) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_4))),
+                                            expected_prefill_4))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3229,7 +3230,7 @@ TEST(AppendMessageTest, Gemma4Async) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_5))),
+                                            expected_prefill_5))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3279,7 +3280,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
   ASSERT_OK_AND_ASSIGN(auto model_assets,
                        ModelAssets::Create(GetTestdataPath(kTestLlmPath)));
   ASSERT_OK_AND_ASSIGN(auto engine_settings, EngineSettings::CreateDefault(
-                                                  model_assets, Backend::CPU));
+                                                 model_assets, Backend::CPU));
   EXPECT_CALL(*mock_engine, GetEngineSettings())
       .WillRepeatedly(testing::ReturnRef(engine_settings));
 
@@ -3295,7 +3296,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
       "properties:{"
       "x:{"
       "type:<|\"|>INTEGER<|\"|>"
-      "}"  // x
+      "}"   // x
       "},"  // properties
       "required:[<|\"|>x<|\"|>],"
       "type:<|\"|>OBJECT<|\"|>}"
@@ -3304,7 +3305,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
   EXPECT_CALL(*mock_session_ptr,
               RunPrefill(testing::ElementsAre(testing::VariantWith<InputText>(
                   testing::Property(&InputText::GetRawTextString,
-                                     expected_prefill_preface)))))
+                                    expected_prefill_preface)))))
       .Times(1)
       .WillOnce(testing::Return(absl::OkStatus()));
 
@@ -3352,7 +3353,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_1))),
+                                            expected_prefill_1))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3367,7 +3368,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_2))),
+                                            expected_prefill_2))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3375,14 +3376,13 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
       Message{{"role", "model"}, {"content", "Nice to meet you."}},
       {.has_pending_message = true}));
 
-
   // Append the 3rd message.
   absl::string_view expected_prefill_3 = "How can I help you today?";
   EXPECT_CALL(
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_3))),
+                                            expected_prefill_3))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3396,7 +3396,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_4))),
+                                            expected_prefill_4))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3417,7 +3417,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_5))),
+                                            expected_prefill_5))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);
@@ -3449,7 +3449,7 @@ TEST(AppendMessageTest, Gemma4SyncPrefillPrefaceOnInitAndAlternateRoles) {
       *mock_session_ptr,
       RunPrefillAsync(testing::ElementsAre(testing::VariantWith<InputText>(
                           testing::Property(&InputText::GetRawTextString,
-                                             expected_prefill_6))),
+                                            expected_prefill_6))),
                       testing::_))
       .Times(1)
       .WillOnce(test_callback);

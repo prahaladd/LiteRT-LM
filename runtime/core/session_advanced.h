@@ -41,12 +41,12 @@
 
 namespace litert::lm {
 
-// SessionAdvanced is an advanced implementation of Engine::Session. The
+// SessionAdvanced is an implementation of SessionInterface. The
 // underlying prefill/decode use the LLM Execution Manager's advanced resource
 // management to support efficient multi-sessions and session cloning features.
-class SessionAdvanced : public Engine::Session {
+class SessionAdvanced : public SessionInterface {
  public:
-  class AdvancedTaskController : public Engine::Session::TaskController {
+  class AdvancedTaskController : public SessionInterface::TaskController {
    public:
     AdvancedTaskController(TaskId task_id,
                            std::shared_ptr<std::atomic<bool>> cancelled,
@@ -115,7 +115,7 @@ class SessionAdvanced : public Engine::Session {
       const std::vector<absl::string_view>& target_text,
       bool store_token_lengths) override;
 
-  absl::StatusOr<std::unique_ptr<Engine::Session::TaskController>>
+  absl::StatusOr<std::unique_ptr<SessionInterface::TaskController>>
   RunTextScoringAsync(
       const std::vector<absl::string_view>& target_text,
       absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback,
@@ -189,11 +189,11 @@ class SessionAdvanced : public Engine::Session {
   }
 
   // TODO b/409401231 - Add unit tests for this function.
-  absl::StatusOr<std::unique_ptr<Session>> Clone() override
+  absl::StatusOr<std::unique_ptr<SessionInterface>> Clone() override
       ABSL_LOCKS_EXCLUDED(mutex_);
 
   // TODO b/409401231 - Add unit tests for this function.
-  absl::StatusOr<std::unique_ptr<Session>> CloneAsync(
+  absl::StatusOr<std::unique_ptr<SessionInterface>> CloneAsync(
       absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback) override
       ABSL_LOCKS_EXCLUDED(mutex_);
 
@@ -225,7 +225,7 @@ class SessionAdvanced : public Engine::Session {
         last_task_ids_(last_task_ids) {}
 
   // The implementation of CloneAsync which assumes mutex_ is locked.
-  absl::StatusOr<std::unique_ptr<Session>> CloneAsyncLocked(
+  absl::StatusOr<std::unique_ptr<SessionInterface>> CloneAsyncLocked(
       absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback)
       ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 

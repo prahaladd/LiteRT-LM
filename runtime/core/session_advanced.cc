@@ -46,7 +46,7 @@
 namespace litert::lm {
 namespace {
 
-using TaskController = Engine::Session::TaskController;
+using TaskController = SessionInterface::TaskController;
 
 }  // namespace
 
@@ -300,7 +300,7 @@ absl::StatusOr<Responses> SessionAdvanced::RunTextScoring(
   return collected_responses;
 }
 
-absl::StatusOr<std::unique_ptr<Engine::Session::TaskController>>
+absl::StatusOr<std::unique_ptr<SessionInterface::TaskController>>
 SessionAdvanced::RunTextScoringAsync(
     const std::vector<absl::string_view>& target_text,
     absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback,
@@ -385,9 +385,9 @@ absl::StatusOr<BenchmarkInfo*> SessionAdvanced::GetMutableBenchmarkInfo() {
   return execution_manager_lock->GetMutableBenchmarkInfo(session_id_);
 }
 
-absl::StatusOr<std::unique_ptr<Engine::Session>> SessionAdvanced::Clone() {
+absl::StatusOr<std::unique_ptr<SessionInterface>> SessionAdvanced::Clone() {
   absl::Status status = absl::OkStatus();
-  std::unique_ptr<Engine::Session> session;
+  std::unique_ptr<SessionInterface> session;
   {
     absl::MutexLock lock(mutex_);
     ASSIGN_OR_RETURN(
@@ -401,13 +401,13 @@ absl::StatusOr<std::unique_ptr<Engine::Session>> SessionAdvanced::Clone() {
   return session;
 }
 
-absl::StatusOr<std::unique_ptr<Engine::Session>> SessionAdvanced::CloneAsync(
+absl::StatusOr<std::unique_ptr<SessionInterface>> SessionAdvanced::CloneAsync(
     absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback) {
   absl::MutexLock lock(mutex_);
   return CloneAsyncLocked(std::move(callback));
 }
 
-absl::StatusOr<std::unique_ptr<Engine::Session>>
+absl::StatusOr<std::unique_ptr<SessionInterface>>
 SessionAdvanced::CloneAsyncLocked(
     absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback) {
   auto execution_manager_lock = execution_manager_.lock();
