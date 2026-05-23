@@ -652,6 +652,10 @@ absl::Status Conversation::RunTextScoringAsync(
   return absl::OkStatus();
 }
 
+absl::StatusOr<int> Conversation::GetTokenCount() const {
+  return session_->GetCurrentStep();
+}
+
 absl::StatusOr<BenchmarkInfo> Conversation::GetBenchmarkInfo() {
   return session_->GetBenchmarkInfo();
 }
