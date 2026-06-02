@@ -234,5 +234,6 @@ genrule(
     }) + """
         echo 'click' >> $@
         echo 'prompt_toolkit' >> $@
+        echo 'typing-extensions' >> $@
     """,
 )

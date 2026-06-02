@@ -37,6 +37,7 @@ pytype_strict_library(
         "//python/litert_lm_cli:help_formatter",
         "//python/litert_lm_cli:model",
         requirement("click"),
+        requirement("typing_extensions"),
     ],
 )
 

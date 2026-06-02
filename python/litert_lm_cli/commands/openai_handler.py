@@ -30,10 +30,13 @@ import http.server
 import json
 import os
 import traceback
-from typing import Any, override
+from typing import Any
 import urllib.request
 
 import click
+
+# Migrate to built-in "typing" when min python version is 3.12.
+from typing_extensions import override
 
 import litert_lm
 from litert_lm_cli import (
