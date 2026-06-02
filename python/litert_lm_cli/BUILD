@@ -203,5 +203,6 @@ genrule(
         echo 'click' >> $@
         echo 'huggingface_hub' >> $@
         echo 'prompt_toolkit' >> $@
+        echo 'typing-extensions' >> $@
     """,
 )
