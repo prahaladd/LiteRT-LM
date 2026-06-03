@@ -148,7 +148,7 @@ macos_dylib(
     features = ["exported_symbols"],
     linkopts = [
         "-undefined dynamic_lookup",
-        "-install_name @rpath/CLiteRTLM_mac.dylib",
+        "-install_name @rpath/libCLiteRTLM_mac.dylib",
     ],
     minimum_os_version = "12.0",
     visibility = ["//visibility:public"],
@@ -177,7 +177,7 @@ genrule(
     cmd = """
        mkdir -p CLiteRTLM_mac/Headers
        # Copy the universal dylib
-       cp $(location :CLiteRTLM_universal) CLiteRTLM_mac/CLiteRTLM_mac.dylib
+       cp $(location :CLiteRTLM_universal) CLiteRTLM_mac/libCLiteRTLM_mac.dylib
        # Copy the headers
        cp $(location //c:engine.h) CLiteRTLM_mac/Headers/
        cp $(location //schema/capabilities:capabilities_c.h) CLiteRTLM_mac/Headers/
