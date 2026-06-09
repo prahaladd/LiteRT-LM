@@ -285,6 +285,7 @@ genrule(
     srcs = select({
         ":wheel_platform_linux_x86_64": ["//prebuilt/linux_x86_64:liblitert-lm.so"],
         ":wheel_platform_linux_arm64": ["//prebuilt/linux_arm64:liblitert-lm.so"],
+        ":wheel_platform_android_arm64": ["//prebuilt/android_arm64:liblitert-lm.so"],
         "//conditions:default": [],
     }),
     outs = ["liblitert-lm.so"],
@@ -349,6 +350,7 @@ filegroup(
         ],
         ":wheel_platform_linux_x86_64": [":copy_prebuilt_litert_lm_so"],
         ":wheel_platform_linux_arm64": [":copy_prebuilt_litert_lm_so"],
+        ":wheel_platform_android_arm64": [":copy_prebuilt_litert_lm_so"],
         # default is empty since the prebuilt_litert_lm_lib might not exist.
         "//conditions:default": [],
     }),
@@ -399,6 +401,11 @@ config_setting(
     define_values = {"wheel_platform": "macos_arm64"},
 )
 
+config_setting(
+    name = "wheel_platform_android_arm64",
+    define_values = {"wheel_platform": "android_arm64"},
+)
+
 py_package(
     name = "package",
     # Explicitly specify packages to avoid including transitively linked shared
@@ -428,6 +435,7 @@ py_wheel(
         ":wheel_platform_linux_arm64": "manylinux_2_27_aarch64",
         ":wheel_platform_macos_arm64": "macosx_12_0_arm64",
         ":wheel_platform_windows_x86_64": "win_amd64",
+        ":wheel_platform_android_arm64": "android_23_arm64_v8a",
         "//conditions:default": "any",
     }),
     python_tag = "py3",
