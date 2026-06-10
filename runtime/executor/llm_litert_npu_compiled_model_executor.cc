@@ -82,6 +82,7 @@ using ::litert::TensorBuffer;
 constexpr char kPrefillSignature[] = "prefill_128";
 constexpr int kPrefillSize = 128;
 constexpr char kDecodeSignature[] = "decode";
+constexpr char cache_k31[] = "kv_cache_k_31";
 constexpr char cache_k25[] = "kv_cache_k_25";
 constexpr char cache_v25[] = "kv_cache_v_25";
 constexpr char cache_k19[] = "kv_cache_k_19";
@@ -3263,7 +3264,9 @@ LlmLiteRtNpuCompiledModelExecutor::CreateForModelWithoutPerLayerEmbedding(
   // fail). Luckily these buffers are not used, so we can simply create new
   // ones to satisfy the compiled model run API.  We can remove this
   // workaround once we have a model that removes these buffers.
-  if (llm_inference_context.prefill_input_buffers.contains(cache_k25)) {
+  if (llm_inference_context.prefill_input_buffers.contains(cache_k31)){
+    // For models with 32 layers. Do nothing.
+  } else if (llm_inference_context.prefill_input_buffers.contains(cache_k25)) {
     LITERT_ASSIGN_OR_RETURN(auto buffer_k, llm_compiled_model.CreateInputBuffer(
                                                kDecodeSignature, cache_k25));
     llm_inference_context.decode_input_buffers[cache_k25] = std::move(buffer_k);
