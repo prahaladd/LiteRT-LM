@@ -1641,7 +1641,9 @@ LlmLiteRtCompiledModelExecutorStatic::Create(
     ABSL_LOG(INFO) << "section_map: " << section_map["tflite_weights"].offset
                    << " " << section_map["tflite_weights"].length;
     LITERT_ASSIGN_OR_RETURN(auto scoped_file, resources.GetScopedFile());
-    compilation_options.SetExternalWeightScopedFile(scoped_file.get(),
+    LITERT_ASSIGN_OR_RETURN(auto duplicated_scoped_file,
+                            scoped_file.get().Duplicate());
+    compilation_options.SetExternalWeightScopedFile(duplicated_scoped_file,
                                                     section_map);
   };
 
