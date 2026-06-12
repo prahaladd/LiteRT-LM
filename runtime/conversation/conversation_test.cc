@@ -38,9 +38,9 @@
 #include "absl/time/clock.h"  // from @com_google_absl
 #include "absl/time/time.h"  // from @com_google_absl
 #include "nlohmann/json.hpp"  // from @nlohmann_json
-#include "runtime/components/constrained_decoding/bitmap.h"
-#include "runtime/components/constrained_decoding/constraint.h"
-#include "runtime/components/constrained_decoding/external_constraint_config.h"
+#include "runtime/components/logits_processor/constrained_decoding/bitmap.h"
+#include "runtime/components/logits_processor/constrained_decoding/constraint.h"
+#include "runtime/components/logits_processor/constrained_decoding/external_constraint_config.h"
 #include "runtime/components/prompt_template.h"
 #include "runtime/components/sentencepiece_tokenizer.h"
 #include "runtime/components/tokenizer.h"

@@ -26,8 +26,8 @@
 #include "absl/time/time.h"  // from @com_google_absl
 #include "absl/types/span.h"  // from @com_google_absl
 #include "litert/test/matchers.h"  // from @litert
-#include "runtime/components/constrained_decoding/constrained_decoder.h"
-#include "runtime/components/constrained_decoding/fake_constraint.h"
+#include "runtime/components/logits_processor/constrained_decoding/constrained_decoder.h"
+#include "runtime/components/logits_processor/constrained_decoding/fake_constraint.h"
 #include "runtime/executor/llm_executor_io_types.h"
 #include "runtime/util/convert_tensor_buffer.h"
 #include "runtime/util/test_utils.h"  // IWYU pragma: keep

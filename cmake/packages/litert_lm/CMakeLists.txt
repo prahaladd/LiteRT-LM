@@ -172,9 +172,9 @@ if(LITERTLM_CORE_FILES)
     )
     apply_patches_from_json("${LITERTLM_PATCHES_DIR}/litertlm_patches.json")
 
-    if(NOT EXISTS "${GENERATED_SRC_DIR}/runtime/components/constrained_decoding/gemma_model_constraint_provider.cc")
+    if(NOT EXISTS "${GENERATED_SRC_DIR}/runtime/components/logits_processor/constrained_decoding/gemma_model_constraint_provider.cc")
       file(COPY "${LITERTLM_PATCHES_DIR}/stubs/gemma_model_constraint_provider.cc"
-        DESTINATION "${GENERATED_SRC_DIR}/runtime/components/constrained_decoding"
+        DESTINATION "${GENERATED_SRC_DIR}/runtime/components/logits_processor/constrained_decoding"
       )
     endif()
 endif()

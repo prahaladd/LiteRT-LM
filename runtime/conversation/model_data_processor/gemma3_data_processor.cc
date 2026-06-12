@@ -31,9 +31,9 @@
 #include "nlohmann/json.hpp"  // from @nlohmann_json
 #include "nlohmann/json_fwd.hpp"  // from @nlohmann_json
 #include "litert/cc/litert_layout.h"  // from @litert
-#include "runtime/components/constrained_decoding/constraint.h"
+#include "runtime/components/logits_processor/constrained_decoding/constraint.h"
 #if !defined(LITERT_LM_FST_CONSTRAINTS_DISABLED)
-#include "runtime/components/constrained_decoding/gemma_model_constraint_provider.h"
+#include "runtime/components/logits_processor/constrained_decoding/gemma_model_constraint_provider.h"
 #endif
 #include "runtime/components/preprocessor/audio_preprocessor.h"
 #include "runtime/components/preprocessor/audio_preprocessor_miniaudio.h"

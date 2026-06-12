@@ -26,7 +26,7 @@
 #include "absl/strings/str_cat.h"  // from @com_google_absl
 #include "litert/cc/litert_macros.h"  // from @litert
 #include "litert/cc/litert_tensor_buffer.h"  // from @litert
-#include "runtime/components/constrained_decoding/constrained_decoder.h"
+#include "runtime/components/logits_processor/constrained_decoding/constrained_decoder.h"
 #include "runtime/util/logging_tensor_buffer.h"
 
 namespace litert::lm {

@@ -614,13 +614,13 @@ cc_test(
     srcs = ["litert_lm_streaming_loader_test.cc"],
     data = ["//runtime/testdata"],
     deps = [
+        ":data_stream",
         ":file_data_stream",
         ":litert_lm_streaming_loader",
         ":test_utils",
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:status_matchers",
-        "//runtime/util:data_stream",
         "//schema/core:litertlm_header_schema",
         "//schema/core:litertlm_read",
     ],
@@ -740,6 +740,7 @@ cc_test(
     srcs = ["model_type_utils_test.cc"],
     deps = [
         ":model_type_utils",
+        ":test_utils",
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
@@ -747,7 +748,6 @@ cc_test(
         "//runtime/components:tokenizer",
         "//runtime/proto:llm_metadata_cc_proto",
         "//runtime/proto:llm_model_type_cc_proto",
-        "//runtime/util:test_utils",
     ],
 )
 

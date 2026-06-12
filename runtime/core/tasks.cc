@@ -37,8 +37,8 @@
 #include "litert/cc/litert_element_type.h"  // from @litert
 #include "litert/cc/litert_macros.h"  // from @litert
 #include "litert/cc/litert_tensor_buffer.h"  // from @litert
-#include "runtime/components/constrained_decoding/constrained_decoder.h"
-#include "runtime/components/constrained_decoding/constraint.h"
+#include "runtime/components/logits_processor/constrained_decoding/constrained_decoder.h"
+#include "runtime/components/logits_processor/constrained_decoding/constraint.h"
 #include "runtime/components/sampler.h"
 #include "runtime/components/scoring_cpu_util.h"
 #include "runtime/components/stop_token_detector.h"
@@ -332,8 +332,7 @@ class DecodeOneStep {
       // should be ignored.
       if (!is_first_step_ && constrained_decoder_) {
         LITERT_ASSIGN_OR_RETURN(auto last_token_ids, decoded_ids->Duplicate());
-        RETURN_IF_ERROR(
-            constrained_decoder_->UpdateConstraintState(last_token_ids));
+        RETURN_IF_ERROR(constrained_decoder_->UpdateState(last_token_ids));
       }
       // Decoding section.
       if (benchmark_info_.has_value()) {
@@ -346,7 +345,7 @@ class DecodeOneStep {
       // If constrained decoding is enabled, masks the logits based on the
       // constraint state.
       if (constrained_decoder_) {
-        RETURN_IF_ERROR(constrained_decoder_->MaskLogits(output_logits));
+        RETURN_IF_ERROR(constrained_decoder_->ProcessLogits(output_logits));
       }
 
       // Samping section.

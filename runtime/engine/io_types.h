@@ -32,7 +32,7 @@
 #include "absl/time/time.h"  // from @com_google_absl
 #include "absl/types/span.h"  // from @com_google_absl
 #include "litert/cc/litert_tensor_buffer.h"  // from @litert
-#include "runtime/components/constrained_decoding/constraint.h"
+#include "runtime/components/logits_processor/constrained_decoding/constraint.h"
 #include "runtime/proto/engine.pb.h"
 #include "runtime/util/status_macros.h"
 

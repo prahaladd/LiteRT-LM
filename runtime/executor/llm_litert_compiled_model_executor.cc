@@ -24,7 +24,6 @@
 #include <random>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"  // from @com_google_absl
@@ -1163,9 +1162,8 @@ absl::StatusOr<TensorBuffer> LlmLiteRtCompiledModelExecutorBase::DecodeLogits(
     }
     // Update constraint state only with decode ids.
     if (last_run_is_decode) {
-      RETURN_IF_ERROR(
-          decode_params.GetConstraintDecoder()->UpdateConstraintState(
-              absl::MakeSpan(current_token_ids)));
+      RETURN_IF_ERROR(decode_params.GetConstraintDecoder()->UpdateState(
+          absl::MakeSpan(current_token_ids)));
     }
 
     LITERT_ASSIGN_OR_RETURN(auto output_logits_buffer_type,
@@ -1175,7 +1173,7 @@ absl::StatusOr<TensorBuffer> LlmLiteRtCompiledModelExecutorBase::DecodeLogits(
     if (output_logits_buffer_type == TensorBufferType::kHostMemory) {
       // Mask logits based on the current constraint state.
       RETURN_IF_ERROR(
-          decode_params.GetConstraintDecoder()->MaskLogits(output_logits));
+          decode_params.GetConstraintDecoder()->ProcessLogits(output_logits));
     } else {
       // For GPU, we always copy the logits to CPU and mask them, then write
       // them back to GPU.
@@ -1186,7 +1184,7 @@ absl::StatusOr<TensorBuffer> LlmLiteRtCompiledModelExecutorBase::DecodeLogits(
         LITERT_ASSIGN_OR_RETURN(auto logits_vector,
                                 CopyFromTensorBuffer<float>(output_logits));
         // Mask logits based on the current constraint state.
-        RETURN_IF_ERROR(decode_params.GetConstraintDecoder()->MaskLogits(
+        RETURN_IF_ERROR(decode_params.GetConstraintDecoder()->ProcessLogits(
             absl::MakeSpan(logits_vector.data(), logits_vector.size()),
             logits_tensor_type.Layout().Dimensions()));
         // Write the masked logits back to the tensor buffer.
@@ -1200,7 +1198,7 @@ absl::StatusOr<TensorBuffer> LlmLiteRtCompiledModelExecutorBase::DecodeLogits(
             CopyFromTensorBuffer<tflite::half>(output_logits));
 
         // Mask logits based on the current constraint state.
-        RETURN_IF_ERROR(decode_params.GetConstraintDecoder()->MaskLogits(
+        RETURN_IF_ERROR(decode_params.GetConstraintDecoder()->ProcessLogits(
             absl::MakeSpan(logits_vector.data(), logits_vector.size()),
             logits_tensor_type.Layout().Dimensions()));
         // Write the masked logits back to the tensor buffer.

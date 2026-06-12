@@ -207,8 +207,7 @@ absl::StatusOr<std::vector<std::vector<int>>> FakeLlmExecutor::Decode(
         (*last_token_ids_span)[i] = last_decode_tokens[i];
       }
       // Update the constraint state with the last token ids.
-      RETURN_IF_ERROR(
-          constraint_decoder->UpdateConstraintState(last_token_ids));
+      RETURN_IF_ERROR(constraint_decoder->UpdateState(last_token_ids));
     }
 
     LITERT_ASSIGN_OR_RETURN(
@@ -217,7 +216,7 @@ absl::StatusOr<std::vector<std::vector<int>>> FakeLlmExecutor::Decode(
     DecodeIdsToLogits(decode_tokens_set_[decode_times_], vocab_size_,
                       output_logits);
     // Apply the mask from the constraint decoder to the logits.
-    RETURN_IF_ERROR(constraint_decoder->MaskLogits(output_logits));
+    RETURN_IF_ERROR(constraint_decoder->ProcessLogits(output_logits));
     output_tokens = DecodeLogitsToIds(batch_size_, vocab_size_, output_logits,
                                       decode_tokens_set_);
   } else {

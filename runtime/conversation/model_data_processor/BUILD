@@ -115,7 +115,7 @@ cc_library(
         "@com_google_absl//absl/strings:string_view",
         "@nlohmann_json//:json",
         "//runtime/components:prompt_template",
-        "//runtime/components/constrained_decoding:constraint",
+        "//runtime/components/logits_processor/constrained_decoding:constraint",
         "//runtime/conversation:io_types",
         "//runtime/engine:io_types",
     ],
@@ -298,7 +298,7 @@ cc_library(
         "//runtime/components:prompt_template",
         "//runtime/components:sentencepiece_tokenizer",
         "//runtime/components:tokenizer",
-        "//runtime/components/constrained_decoding:constraint",
+        "//runtime/components/logits_processor/constrained_decoding:constraint",
         "//runtime/components/preprocessor:audio_preprocessor",
         "//runtime/components/preprocessor:audio_preprocessor_miniaudio",
         "//runtime/components/preprocessor:image_preprocessor",
@@ -315,7 +315,7 @@ cc_library(
     ] + select({
         ":litert_lm_fst_constraints_disabled": [],
         "//conditions:default": [
-            "//runtime/components/constrained_decoding:gemma_model_constraint_provider_lib",
+            "//runtime/components/logits_processor/constrained_decoding:gemma_model_constraint_provider_lib",
         ],
     }),
 )
@@ -370,7 +370,7 @@ cc_library(
         "@nlohmann_json//:json",
         "//runtime/components:sentencepiece_tokenizer",
         "//runtime/components:tokenizer",
-        "//runtime/components/constrained_decoding:constraint",
+        "//runtime/components/logits_processor/constrained_decoding:constraint",
         "//runtime/components/tool_use:fc_tool_format_utils",
         "//runtime/components/tool_use:parser_utils",
         "//runtime/conversation:io_types",
@@ -380,7 +380,7 @@ cc_library(
     ] + select({
         ":litert_lm_fst_constraints_disabled": [],
         "//conditions:default": [
-            "//runtime/components/constrained_decoding:gemma_model_constraint_provider_lib",
+            "//runtime/components/logits_processor/constrained_decoding:gemma_model_constraint_provider_lib",
         ],
     }),
 )
@@ -436,7 +436,7 @@ cc_library(
         "//runtime/components:prompt_template",
         "//runtime/components:sentencepiece_tokenizer",
         "//runtime/components:tokenizer",
-        "//runtime/components/constrained_decoding:constraint",
+        "//runtime/components/logits_processor/constrained_decoding:constraint",
         "//runtime/components/preprocessor:audio_preprocessor",
         "//runtime/components/preprocessor:audio_preprocessor_miniaudio",
         "//runtime/components/preprocessor:image_preprocessor",
@@ -453,7 +453,7 @@ cc_library(
     ] + select({
         ":litert_lm_fst_constraints_disabled": [],
         "//conditions:default": [
-            "//runtime/components/constrained_decoding:gemma_model_constraint_provider_lib",
+            "//runtime/components/logits_processor/constrained_decoding:gemma_model_constraint_provider_lib",
         ],
     }),
 )

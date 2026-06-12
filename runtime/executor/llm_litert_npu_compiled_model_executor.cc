@@ -1545,13 +1545,12 @@ LlmLiteRtNpuCompiledModelExecutor::DecodeLogits(
   if (decode_params.HasConstraintDecoder()) {
     std::vector<int> current_token_ids = {token->id()};
     if (last_run_is_decode) {
-      RETURN_IF_ERROR(
-          decode_params.GetConstraintDecoder()->UpdateConstraintState(
-              absl::MakeSpan(current_token_ids)));
+      RETURN_IF_ERROR(decode_params.GetConstraintDecoder()->UpdateState(
+          absl::MakeSpan(current_token_ids)));
     }
 
     RETURN_IF_ERROR(
-        decode_params.GetConstraintDecoder()->MaskLogits(output_logits));
+        decode_params.GetConstraintDecoder()->ProcessLogits(output_logits));
   }
 
   current_step_++;
