@@ -829,15 +829,12 @@ absl::Status ResourceManager::TryLoadingAudioExecutor() {
   if (!audio_executor_settings_) {
     return absl::InvalidArgumentError("Audio options should not be null.");
   }
-  if (audio_executor_settings_->GetBackend() == litert::lm::Backend::CPU ||
-      audio_executor_settings_->GetBackend() == litert::lm::Backend::GPU) {
+  {
     RETURN_IF_ERROR(MaybeCreateLitertEnv());
+    RET_CHECK_NE(litert_env_, nullptr);
     ASSIGN_OR_RETURN(audio_executor_,
                      litert::lm::AudioLiteRtCompiledModelExecutor::Create(
                          *audio_executor_settings_, *litert_env_));
-  } else {
-    return absl::InvalidArgumentError(
-        "Audio executor backend is not supported.");
   }
   return absl::OkStatus();
 }
