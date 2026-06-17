@@ -192,7 +192,7 @@ absl::Status MainHelper(int argc, char** argv) {
            "[--max_num_tokens=<max_num_tokens>] "
            "[--prefill_batch_sizes=<size1>[,<size2>,...]]"
            "[--prefill_chunk_size=<prefill_chunk_size>] "
-           "[--vision_backend=<cpu|gpu>] [--audio_backend=<cpu|gpu>] "
+           "[--vision_backend=<cpu|gpu|npu>] [--audio_backend=<cpu|gpu>] "
            "[--sampler_backend=<cpu|gpu>] [--benchmark] "
            "[--benchmark_prefill_tokens=<num_prefill_tokens>] "
            "[--benchmark_decode_tokens=<num_decode_tokens>] "

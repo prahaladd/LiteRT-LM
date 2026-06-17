@@ -261,8 +261,8 @@ absl::Status VisionLiteRtCompiledModelExecutor::VisionEncoder::Initialize() {
                               options.GetGoogleTensorOptions());
       google_tensor_options.SetPerformanceMode(
           google_tensor::GoogleTensorOptions::PerformanceMode::kBurst);
-      // TODO: yunandrew - Add support for other NPU backends.
-      options.SetHardwareAccelerators(litert::HwAccelerators::kCpu);
+      options.SetHardwareAccelerators(litert::HwAccelerators::kNpu |
+                                      litert::HwAccelerators::kCpu);
       break;
     }
 #endif  // !defined(LITERT_DISABLE_NPU)
@@ -340,7 +340,8 @@ absl::Status VisionLiteRtCompiledModelExecutor::VisionAdapter::Initialize() {
       google_tensor_options.SetPerformanceMode(
           google_tensor::GoogleTensorOptions::PerformanceMode::kBurst);
 
-      options.SetHardwareAccelerators(litert::HwAccelerators::kCpu);
+      options.SetHardwareAccelerators(litert::HwAccelerators::kNpu |
+                                      litert::HwAccelerators::kCpu);
       break;
     }
 #endif  // !defined(LITERT_DISABLE_NPU)

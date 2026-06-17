@@ -718,7 +718,7 @@ absl::StatusOr<nlohmann::json> BuildContentList(
           return absl::InvalidArgumentError(
               "Image backend is not specified. Please specify the vision "
               "backend "
-              "with --vision_backend=<cpu|gpu>");
+              "with --vision_backend=<cpu|gpu|npu>");
         }
         if (media_type == "audio" && !settings.audio_backend.has_value()) {
           return absl::InvalidArgumentError(

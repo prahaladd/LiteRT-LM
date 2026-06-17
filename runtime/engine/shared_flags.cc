@@ -21,8 +21,9 @@
 #include "absl/flags/flag.h"  // from @com_google_absl
 
 ABSL_FLAG(std::optional<std::string>, vision_backend, std::nullopt,
-          "Backend to use for the vision model (cpu or gpu). If not specified, "
-          "the vision backend will be chosen based on the main backend.");
+          "Backend to use for the vision model (cpu, gpu, or npu). If not "
+          "specified, the vision backend will be chosen based on the main "
+          "backend.");
 ABSL_FLAG(std::optional<std::string>, audio_backend, std::nullopt,
           "Backend to use for the audio model (cpu or gpu). If not specified, "
           "the audio backend will be chosen based on the main backend.");
