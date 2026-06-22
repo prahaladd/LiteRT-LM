@@ -42,9 +42,9 @@
 #include "absl/types/span.h"  // from @com_google_absl
 #include "litert/c/litert_model_types.h"  // from @litert
 #include "litert/c/litert_op_code.h"  // from @litert
+#include "litert/cc/internal/litert_compiled_model_next.h"  // from @litert
 #include "litert/cc/internal/litert_extended_model.h"  // from @litert
 #include "litert/cc/litert_common.h"  // from @litert
-#include "litert/cc/litert_compiled_model.h"  // from @litert
 #include "litert/cc/litert_element_type.h"  // from @litert
 #include "litert/cc/litert_environment.h"  // from @litert
 #include "litert/cc/litert_expected.h"  // from @litert
@@ -341,6 +341,14 @@ std::ostream& operator<<(
      << ((stats.prefill_llm_inference_latency_us * 100) /
          (float)stats.prefill_e2e_latency_us)
      << "%)";
+  if (stats.prefill_tpu_tile_time_us > 0) {
+    os << "\n"
+       << "  Prefill TPU tile time [us]: " << stats.prefill_tpu_tile_time_us;
+  }
+  if (stats.prefill_tpu_fw_time_us > 0) {
+    os << "\n"
+       << "  Prefill TPU FW time [us]: " << stats.prefill_tpu_fw_time_us;
+  }
   os << "\n"
      << "Total prefill cache update inference latency [us]: "
      << stats.prefill_cache_update_inference_latency_us << " ("
@@ -405,6 +413,14 @@ std::ostream& operator<<(
      << ((stats.decode_llm_inference_latency_us * 100) /
          (float)stats.decode_e2e_latency_us)
      << "%)";
+  if (stats.decode_tpu_tile_time_us > 0) {
+    os << "\n"
+       << "  Decode TPU tile time [us]: " << stats.decode_tpu_tile_time_us;
+  }
+  if (stats.decode_tpu_fw_time_us > 0) {
+    os << "\n"
+       << "  Decode TPU FW time [us]: " << stats.decode_tpu_fw_time_us;
+  }
   os << "\n"
      << "Total decode cache update inference latency [us]: "
      << stats.decode_cache_update_inference_latency_us << " ("
@@ -2061,6 +2077,10 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::PrefillInternal(
 
   // Invoke LLM signature.
   {
+    if (auto s = llm_compiled_model_.StartMetricsCollection(0); !s) {
+      ABSL_VLOG(1) << "Failed to start TPU metrics collection: "
+                   << s.Error().Message();
+    }
     auto start = absl::Now();
     auto res =
         llm_compiled_model_.Run(LlmSignatures::kPrefillLlm,
@@ -2070,6 +2090,19 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::PrefillInternal(
     auto end = absl::Now();
     latency_stats_.prefill_llm_inference_latency_us +=
         absl::ToInt64Microseconds(end - start);
+    auto metrics_res = llm_compiled_model_.StopMetricsCollection();
+    if (metrics_res) {
+      for (const auto& metric : metrics_res->metrics) {
+        if (metric.name == "hardware_execution_time_us") {
+          latency_stats_.prefill_tpu_tile_time_us += metric.value.int_value;
+        } else if (metric.name == "firmware_execution_time_us") {
+          latency_stats_.prefill_tpu_fw_time_us += metric.value.int_value;
+        }
+      }
+    } else {
+      ABSL_VLOG(1) << "Failed to stop TPU metrics collection: "
+                   << metrics_res.Error().Message();
+    }
   }
 
   // Cache update.
@@ -2242,6 +2275,10 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::DecodeInternal(
 
   // Invoke LLM signature.
   {
+    if (auto s = llm_compiled_model_.StartMetricsCollection(0); !s) {
+      ABSL_VLOG(1) << "Failed to start TPU metrics collection: "
+                   << s.Error().Message();
+    }
     auto start = absl::Now();
     auto res = llm_compiled_model_.Run(
         LlmSignatures::kDecodeLlm, llm_inference_context_.decode_input_buffers,
@@ -2250,6 +2287,19 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::DecodeInternal(
     latency_stats_.decode_llm_inference_latency_us +=
         absl::ToInt64Microseconds(end - start);
     RET_CHECK(res) << "Failed to run LLM model." << res.Error().Message();
+    auto metrics_res = llm_compiled_model_.StopMetricsCollection();
+    if (metrics_res) {
+      for (const auto& metric : metrics_res->metrics) {
+        if (metric.name == "hardware_execution_time_us") {
+          latency_stats_.decode_tpu_tile_time_us += metric.value.int_value;
+        } else if (metric.name == "firmware_execution_time_us") {
+          latency_stats_.decode_tpu_fw_time_us += metric.value.int_value;
+        }
+      }
+    } else {
+      ABSL_VLOG(1) << "Failed to stop TPU metrics collection: "
+                   << metrics_res.Error().Message();
+    }
   }
 
   // Cache update.
@@ -2953,8 +3003,8 @@ LlmLiteRtNpuCompiledModelExecutor::CreateForModelHasPerLayerEmbedding(
   LITERT_ASSIGN_OR_RETURN(auto options,
                           CreateLiteRtNpuOptions(executor_settings));
   LITERT_ASSIGN_OR_RETURN(
-      CompiledModel llm_compiled_model,
-      CompiledModel::Create(env, transformer_model->Get(), options));
+      CompiledModelNext llm_compiled_model,
+      CompiledModelNext::Create(env, *transformer_model, options));
 
   // Allocate all input and output buffers of the LLM model that are meant to be
   // used by the NPU chip first, so that we can later duplicate the buffers into
@@ -3300,8 +3350,8 @@ LlmLiteRtNpuCompiledModelExecutor::CreateForModelWithoutPerLayerEmbedding(
   LITERT_ASSIGN_OR_RETURN(auto options,
                           CreateLiteRtNpuOptions(executor_settings));
   LITERT_ASSIGN_OR_RETURN(
-      CompiledModel llm_compiled_model,
-      CompiledModel::Create(env, transformer_model->Get(), options));
+      CompiledModelNext llm_compiled_model,
+      CompiledModelNext::Create(env, *transformer_model, options));
 
   // Allocate all input and output buffers of the LLM model that are meant to be
   // used by the NPU chip first, so that we can later duplicate the buffers into
