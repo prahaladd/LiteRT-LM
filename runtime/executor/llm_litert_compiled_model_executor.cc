@@ -1775,6 +1775,9 @@ LlmLiteRtCompiledModelExecutorStatic::Create(
 
       decode_output_buffers[output_name] = std::move(output_buffer);
     }
+    if (output_name == signatures.output_logits) {
+      LITERT_RETURN_IF_ERROR(decode_output_buffers[output_name].Clear());
+    }
   }
 
   LITERT_ASSIGN_OR_RETURN(
@@ -2143,6 +2146,9 @@ LlmLiteRtCompiledModelExecutorDynamic::Create(
                               compiled_model->CreateOutputBuffer(
                                   kDecodeSignatureRunner, output_name));
       decode_output_buffers[output_name] = std::move(output_buffer);
+    }
+    if (output_name == signatures.output_logits) {
+      LITERT_RETURN_IF_ERROR(decode_output_buffers[output_name].Clear());
     }
   }
 
