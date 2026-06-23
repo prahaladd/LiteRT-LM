@@ -859,13 +859,18 @@ absl::Status ThreadedExecutionManager::AddDecodeTask(
     Constraint* absl_nullable constraint,
     std::shared_ptr<std::atomic<bool>> absl_nonnull cancelled,
     absl::AnyInvocable<void(absl::StatusOr<Responses>)> callback,
-    int max_output_tokens) {
+    int max_output_tokens, std::optional<int> thinking_token_budget,
+    std::vector<int> thinking_start_token_ids,
+    std::vector<int> thinking_end_token_ids) {
   if (callback == nullptr) {
     callback = [](absl::StatusOr<Responses> responses) {};
   }
 
   auto task = [this, task_id, repetition_penalty_config, constraint, cancelled,
-               max_output_tokens]() mutable -> void {
+               max_output_tokens, thinking_token_budget,
+               thinking_start_token_ids = std::move(thinking_start_token_ids),
+               thinking_end_token_ids =
+                   std::move(thinking_end_token_ids)]() mutable -> void {
     auto task_info = StartTask(task_id);
     if (!task_info.ok()) {
       FinishTaskAndLogErrors(task_id, task_info.status(),
@@ -923,7 +928,8 @@ absl::Status ThreadedExecutionManager::AddDecodeTask(
         *llm_executor.value(), *tokenizer_, *session_info->stop_token_detector,
         num_output_candidates, session_info->benchmark_info, optional_sampler,
         repetition_penalty_config, constraint, std::move(decoded_ids_buffer),
-        callback, cancelled.get(), max_output_tokens);
+        callback, cancelled.get(), max_output_tokens, thinking_token_budget,
+        thinking_end_token_ids, thinking_start_token_ids);
     if (!responses.ok() && absl::IsCancelled(responses.status())) {
       responses = Responses(TaskState::kCancelled);
     }
