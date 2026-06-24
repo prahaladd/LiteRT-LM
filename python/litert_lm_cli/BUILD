@@ -40,9 +40,21 @@ genrule(
 )
 
 pytype_strict_library(
+    name = "config",
+    srcs = ["config.py"],
+    data = ["config_schema.json"],
+    deps = [
+        requirement("click"),
+        "//third_party/py/jsonschema",
+    ],
+    imports = [".."],
+)
+
+pytype_strict_library(
     name = "model",
     srcs = ["model.py"],
     deps = [
+        ":config",
         "//python/litert_lm",
         "//python/litert_lm_builder:litertlm_builder",
         "//python/litert_lm_builder:litertlm_peek",
@@ -124,12 +136,26 @@ py_test(
     srcs = ["model_test.py"],
     tags = ["nowindows"],
     deps = [
+        ":config",
         ":model",
         "//python/litert_lm",
         "//python/litert_lm_builder:litertlm_builder",
         "@absl_py//absl/testing:absltest",
         "@absl_py//absl/testing:parameterized",
     ],
+)
+
+py_test(
+    name = "config_test",
+    srcs = ["config_test.py"],
+    tags = ["nowindows"],
+    deps = [
+        ":config",
+        "@absl_py//absl/testing:absltest",
+        "@absl_py//absl/testing:parameterized",
+        requirement("click"),
+    ],
+    imports = [".."],
 )
 
 py_test(

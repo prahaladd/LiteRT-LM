@@ -86,7 +86,7 @@ def _parse_sampler_config(
 
 def _is_gpu_only_model(model_path: str) -> bool:
   """Returns True if the model is GPU-only."""
-  return serve_util._is_gpu_only_model(model_path)
+  return cli_model.model_default_backend(model_path) == "gpu"
 
 
 class _OpenAIStreamFormatter(abc.ABC):

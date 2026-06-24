@@ -16,13 +16,11 @@ from __future__ import annotations
 
 import dataclasses
 import http.server
-import io
 import socket
 
 import click
 
 import litert_lm
-from litert_lm_builder import litertlm_peek
 from litert_lm_cli import model
 
 
@@ -87,50 +85,6 @@ class CORSRequestHandler(http.server.BaseHTTPRequestHandler):
   def do_OPTIONS(self) -> None:  # pylint: disable=invalid-name
     self.send_response(200)
     self.end_headers()
-
-
-def _is_gpu_only_model(model_path: str) -> bool:
-  """Returns True if the model is GPU-only."""
-  try:
-    with io.StringIO() as dummy_out:
-      metadata = litertlm_peek.read_litertlm_header(model_path, dummy_out)
-  except Exception as e:  # pylint: disable=broad-exception-caught
-    click.echo(
-        click.style(f"Failed to inspect model metadata: {e!r}", fg="yellow")
-    )
-    return False
-
-  section_metadata = metadata.SectionMetadata()
-  if not section_metadata:
-    return False
-  for i in range(section_metadata.ObjectsLength()):
-    section = section_metadata.Objects(i)
-    if not section or section.ItemsLength() == 0:
-      continue
-    for j in range(section.ItemsLength()):
-      item_dict = litertlm_peek.kvp_to_dict(section.Items(j))
-      if item_dict.get("key") != "backend_constraint":
-        continue
-      val = item_dict.get("value")
-      if isinstance(val, str) and val.lower() == "gpu_artisan":
-        return True
-
-  return False
-
-
-def _select_backend(model_path: str) -> litert_lm.Backend:
-  """Inspects .litertlm file metadata to select the execution backend.
-
-  Args:
-    model_path: The absolute filesystem path to the .litertlm model bundle.
-
-  Returns:
-    Backend.GPU() if the model metadata specifies 'gpu_artisan' as the backend
-    constraint, otherwise Backend.CPU().
-  """
-  if _is_gpu_only_model(model_path):
-    return litert_lm.Backend.GPU()
-  return litert_lm.Backend.CPU()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -228,7 +182,7 @@ def get_or_initialize_server_engine(
   """
   if backend is None:
     m = model.Model.from_model_id(model_id)
-    backend = _select_backend(m.model_path)
+    backend = model.parse_backend(None, model_obj=m)
 
   if server.litert_lm_engine is not None:
     if (
