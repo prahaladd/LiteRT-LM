@@ -165,6 +165,10 @@ def _setup_lib_signatures(lib):
       ctypes.c_void_p,
       ctypes.c_int,
   ]
+  lib.litert_lm_engine_settings_set_max_num_images.argtypes = [
+      ctypes.c_void_p,
+      ctypes.c_int,
+  ]
   lib.litert_lm_engine_settings_set_num_threads.argtypes = [
       ctypes.c_void_p,
       ctypes.c_int,

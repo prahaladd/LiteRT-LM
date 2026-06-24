@@ -55,6 +55,7 @@ class Engine(interfaces.AbstractEngine):
           interfaces.Backend | type[interfaces.Backend]
       ) = interfaces.Backend.CPU(),
       max_num_tokens: int | None = None,
+      max_num_images: int | None = None,
       cache_dir: str = "",
       vision_backend: (
           interfaces.Backend | type[interfaces.Backend] | None
@@ -74,6 +75,7 @@ class Engine(interfaces.AbstractEngine):
         model_path=model_path,
         backend=backend,
         max_num_tokens=max_num_tokens,
+        max_num_images=max_num_images,
         cache_dir=cache_dir,
         vision_backend=vision_backend,
         audio_backend=audio_backend,
@@ -125,6 +127,10 @@ class Engine(interfaces.AbstractEngine):
     if self.max_num_tokens is not None:
       self._lib.litert_lm_engine_settings_set_max_num_tokens(
           settings, self.max_num_tokens
+      )
+    if self.max_num_images is not None:
+      self._lib.litert_lm_engine_settings_set_max_num_images(
+          settings, self.max_num_images
       )
     if self.cache_dir:
       self._lib.litert_lm_engine_settings_set_cache_dir(
