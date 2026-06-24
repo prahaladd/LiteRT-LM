@@ -23,7 +23,7 @@ from importlib import resources
 import logging
 import os
 import sys
-from typing import Any
+from typing import Any, ClassVar
 
 from ._ffi import ActivationDataType
 from ._messages import Contents
@@ -36,6 +36,10 @@ class Backend(abc.ABC):
   This is the abstract base class for all hardware backends used by LiteRT-LM.
   Use the subclasses (CPU, GPU, NPU) to specify the backend and its options.
   """
+
+  CPU: ClassVar[type[CPU]]
+  GPU: ClassVar[type[GPU]]
+  NPU: ClassVar[type[NPU]]
 
   def get_name(self) -> str:
     """Returns the string representation of the backend (e.g., 'cpu', 'gpu', 'npu')."""
