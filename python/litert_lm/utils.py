@@ -30,7 +30,7 @@ def _sampler_config_to_params(
 
   if config is not None:
     lib.litert_lm_sampler_params_set_top_k(
-        params, config.top_k if config.top_k is not None else 40
+        params, config.top_k if config.top_k is not None else 1
     )
     lib.litert_lm_sampler_params_set_top_p(
         params, config.top_p if config.top_p is not None else 0.95
