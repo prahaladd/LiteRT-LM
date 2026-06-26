@@ -23,7 +23,7 @@ load(
     "export_lrt_runtime_only_script",
 )
 
-LITERT_MIN_IOS_VERSION = "14.0"
+LITERT_MIN_IOS_VERSION = "15.0"
 
 LITERT_MIN_MACOS_VERSION = "10.15"
 
