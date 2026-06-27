@@ -1994,7 +1994,7 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::PrefillInternal(
       auto lock = std::move(*lock_res);
       mask_input_tokens_ptr = static_cast<int32_t*>(lock.second);
       mask_input_tokens_lock.emplace(std::move(lock.first));
-      memset(mask_input_tokens_ptr, -1, mask_input_tokens_size);
+      memset(mask_input_tokens_ptr, 0, mask_input_tokens_size);
     }
 
     bool* valid_mask_ptr = nullptr;
@@ -2066,6 +2066,7 @@ absl::Status LlmLiteRtNpuCompiledModelExecutor::PrefillInternal(
       processed_input_tokens.push_back(ids[i]);
     }
     processed_tokens_.AddProcessedTokens(processed_input_tokens);
+
     if (valid_mask_ptr) {
       auto& buf = valid_mask_it->second;
       LITERT_ASSIGN_OR_RETURN(auto type, buf.TensorType());
