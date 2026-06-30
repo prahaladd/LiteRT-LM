@@ -89,6 +89,7 @@ cc_library(
     deps = ENGINE_COMMON_DEPS + [
         "//runtime/core:engine_advanced_impl_cpu_only",
     ],
+    alwayslink = True,
 )
 
 cc_test(
