@@ -257,6 +257,10 @@ TEST(ModelTypeConversionTest, ModelTypeToString) {
             "TF_LITE_ARTISAN_TEXT_DECODER");
   EXPECT_EQ(ModelTypeToString(ModelType::kTfLiteMtpDrafter),
             "TF_LITE_MTP_DRAFTER");
+  EXPECT_EQ(ModelTypeToString(ModelType::kTfLiteSelfConditioner),
+            "TF_LITE_SELF_CONDITIONER");
+  EXPECT_EQ(ModelTypeToString(ModelType::kTfLiteEmbedProbs),
+            "TF_LITE_EMBED_PROBS");
   EXPECT_EQ(ModelTypeToString(ModelType::kUnknown), "UNKNOWN");
 }
 
