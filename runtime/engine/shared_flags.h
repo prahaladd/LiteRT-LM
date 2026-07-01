@@ -66,6 +66,7 @@ ABSL_DECLARE_FLAG(std::string, litert_dispatch_lib_dir);
 ABSL_DECLARE_FLAG(bool, sampler_handles_input);
 ABSL_DECLARE_FLAG(std::string, conv_type);
 ABSL_DECLARE_FLAG(bool, cache_compiled_shaders_only);
+ABSL_DECLARE_FLAG(std::string, suppress_tokens);
 ABSL_DECLARE_FLAG(std::string, constraint_regex);
 ABSL_DECLARE_FLAG(bool, use_submodel);
 ABSL_DECLARE_FLAG(bool, enable_speculative_decoding);

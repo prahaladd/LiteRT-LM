@@ -140,7 +140,6 @@ std::optional<Backend> GetSamplerBackend(const LiteRtLmSettings& settings) {
   return *sampler_backend;
 }
 
-
 absl::AnyInvocable<void(absl::StatusOr<Message>)> CreatePrintMessageCallback(
     std::stringstream& captured_output) {
   auto active_channel = std::make_shared<std::string>();
@@ -309,6 +308,8 @@ absl::Status RunSingleTurnSession(const std::string& input_prompt,
   if (settings.max_output_tokens > 0) {
     decode_config.SetMaxOutputTokens(settings.max_output_tokens);
   }
+
+  decode_config.SetSuppressTokensConfig(settings.suppress_tokens_config);
 
   std::unique_ptr<Constraint> constraint;
   if (!settings.constraint_regex.empty()) {
@@ -797,10 +798,12 @@ absl::Status RunLiteRtLm(const LiteRtLmSettings& settings,
       }
     } else {
       ABSL_LOG(INFO) << "Creating conversation";
-      ASSIGN_OR_RETURN(auto conversation_config,
-                       ConversationConfig::Builder()
-                           .SetSessionConfig(session_config)
-                           .Build(*engine));
+      ASSIGN_OR_RETURN(
+          auto conversation_config,
+          ConversationConfig::Builder()
+              .SetSessionConfig(session_config)
+              .SetSuppressTokensConfig(settings.suppress_tokens_config)
+              .Build(*engine));
       ASSIGN_OR_RETURN(conversation,
                        Conversation::Create(*engine, conversation_config));
       if (settings.multi_turns) {

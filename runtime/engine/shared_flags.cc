@@ -149,6 +149,8 @@ ABSL_FLAG(bool, cache_compiled_shaders_only, false,
           "If true, only the compiled shaders will be cached. If false, gpu "
           "graph info including work group sizes (and all compiled shaders "
           "depending on backend) will be cached.");
+ABSL_FLAG(std::string, suppress_tokens, "",
+          "A comma-separated list of tokens to suppress.");
 ABSL_FLAG(std::string, constraint_regex, "",
           "Regular expression to constrain the output generation.");
 ABSL_FLAG(bool, use_submodel, false,

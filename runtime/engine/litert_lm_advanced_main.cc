@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/flat_hash_set.h"  // from @com_google_absl
 #include "absl/flags/flag.h"  // from @com_google_absl
 #include "absl/flags/parse.h"  // from @com_google_absl
 #include "absl/log/absl_log.h"  // from @com_google_absl
@@ -37,7 +38,9 @@
 #include "absl/status/statusor.h"  // from @com_google_absl
 #include "absl/strings/numbers.h"  // from @com_google_absl
 #include "absl/strings/str_cat.h"  // from @com_google_absl
+#include "absl/strings/str_split.h"  // from @com_google_absl
 #include "absl/strings/string_view.h"  // from @com_google_absl
+#include "runtime/components/logits_processor/suppress_tokens_config.h"
 #include "runtime/engine/litert_lm_lib.h"
 #include "runtime/engine/shared_flags.h"
 #include "runtime/proto/litert_lm_metrics.pb.h"
@@ -120,6 +123,21 @@ std::string GetInputPrompt() {
   return "What is the tallest building in the world?";
 }
 
+::litert::lm::SuppressTokensConfig GetSuppressTokensConfig(
+    absl::string_view input) {
+  absl::flat_hash_set<int> result;
+
+  for (absl::string_view s :
+       absl::StrSplit(input, ',', absl::SkipWhitespace())) {
+    int val;
+    if (absl::SimpleAtoi(s, &val)) {
+      result.insert(val);
+    }
+  }
+
+  return ::litert::lm::SuppressTokensConfig(result);
+}
+
 // Writes the metrics to the given file path in protobuf format. Only used in
 // benchmark mode when the metric file path is specified.
 absl::Status WriteMetricsToFile(
@@ -191,6 +209,8 @@ absl::Status MainHelper(int argc, char** argv) {
            "[--disable_gpu_program_cache=<true|false>]"
            "[--cache_compiled_shader_only=<true|false>]"
            "[--conv_type=<auto|float|int8>]"
+           "[--suppress_tokens=<token1,token2,...>]"
+           "[--constraint_regex=<constraint_regex>]"
            "[--enable_speculative_decoding=<true|false>]";
     ABSL_LOG(INFO)
         << "To provide data for multimodality, use [image:/path/to/image.jpg] "
@@ -270,6 +290,8 @@ absl::Status MainHelper(int argc, char** argv) {
       absl::GetFlag(FLAGS_conv_type) == "float"  ? litert::lm::ConvType::kFloat
       : absl::GetFlag(FLAGS_conv_type) == "int8" ? litert::lm::ConvType::kInt8
                                                  : litert::lm::ConvType::kAuto;
+  settings.suppress_tokens_config =
+      GetSuppressTokensConfig(absl::GetFlag(FLAGS_suppress_tokens));
   settings.constraint_regex = absl::GetFlag(FLAGS_constraint_regex);
   settings.use_submodel = absl::GetFlag(FLAGS_use_submodel);
   settings.enable_speculative_decoding =
