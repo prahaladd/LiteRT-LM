@@ -116,6 +116,9 @@ data class EngineConfig(
  *   key. If `null`, uses the default channel configuration from the `LlmMetadata`. If empty,
  *   channels will be disabled.
  * @property extraContext Optional context passed to the prompt template rendering.
+ * @property loraConfig Configuration for LoRA weights.
+ * @property prefillPrefaceOnInit Whether to prefill the preface on initialization. Defaults to
+ *   false.
  */
 data class ConversationConfig
 @JvmOverloads
@@ -128,6 +131,7 @@ constructor(
   val channels: List<Channel>? = null,
   val extraContext: Map<String, Any> = emptyMap(),
   val loraConfig: LoraConfig? = null,
+  val prefillPrefaceOnInit: Boolean = false,
 )
 
 /**
