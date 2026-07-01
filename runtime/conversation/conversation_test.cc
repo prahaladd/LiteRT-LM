@@ -28,6 +28,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "absl/container/flat_hash_map.h"  // from @com_google_absl
+#include "absl/container/flat_hash_set.h"  // from @com_google_absl
 #include "absl/functional/any_invocable.h"  // from @com_google_absl
 #include "absl/status/status.h"  // from @com_google_absl
 #include "absl/status/statusor.h"  // from @com_google_absl
@@ -50,6 +51,8 @@
 #include "runtime/engine/engine_settings.h"
 #include "runtime/engine/io_types.h"
 #include "runtime/executor/executor_settings_base.h"
+#include "runtime/proto/llm_metadata.pb.h"
+#include "runtime/proto/token.pb.h"
 #include "runtime/util/test_utils.h"  // IWYU pragma: keep
 
 namespace litert::lm {
@@ -64,6 +67,11 @@ using ::testing::VariantWith;
 
 absl::string_view kTestLlmPath =
     "litert_lm/runtime/testdata/test_lm.litertlm";
+
+// This is the same as kTestLlmPath, but with suppress tokens {1234, 5678}.
+// This is used to test the suppress tokens functionality.
+absl::string_view kTestLlmSuppressTokensPath =
+    "litert_lm/runtime/testdata/test_lm_suppress_tokens.litertlm";
 
 constexpr char kTestTokenizerPath[] =
     "litert_lm/runtime/components/testdata/gemma3_sentencepiece.model";
@@ -368,6 +376,32 @@ TEST(ConversationConfigTest, OverwritePromptTemplate) {
 
   EXPECT_EQ(config.GetPromptTemplate().GetTemplateSource(),
             "overwrite template");
+}
+
+TEST(ConversationConfigTest, SuppressTokensFromMetadata) {
+  // The test LLM metadata has suppress_tokens {1234, 5678}.
+  ASSERT_OK_AND_ASSIGN(
+      auto model_assets,
+      ModelAssets::Create(GetTestdataPath(kTestLlmSuppressTokensPath)));
+  ASSERT_OK_AND_ASSIGN(auto engine_settings, EngineSettings::CreateDefault(
+                                                 model_assets, Backend::CPU));
+  engine_settings.GetMutableMainExecutorSettings().SetCacheDir(":nocache");
+  engine_settings.GetMutableMainExecutorSettings().SetMaxNumTokens(10);
+
+  ASSERT_OK_AND_ASSIGN(auto engine,
+                       EngineFactory::CreateDefault(engine_settings));
+
+  absl::flat_hash_set<int> suppress_tokens = {5678, 9012};
+  ASSERT_OK_AND_ASSIGN(
+      auto config,
+      ConversationConfig::Builder()
+          .SetSuppressTokensConfig(SuppressTokensConfig(suppress_tokens))
+          .Build(*engine));
+
+  // The suppress tokens are {1234, 5678} from the metadata and {5678, 9012}
+  // from the builder. The expected suppress tokens are {1234, 5678, 9012}.
+  absl::flat_hash_set<int> expected_tokens = {1234, 5678, 9012};
+  EXPECT_EQ(config.suppress_tokens_config().suppress_tokens(), expected_tokens);
 }
 
 struct ConversationTestParams {

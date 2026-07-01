@@ -87,4 +87,7 @@ message LlmMetadata {
 
   // The channels defined for this model.
   repeated Channel channels = 8;
+
+  // The suppress tokens for the model.
+  TokenIds suppress_tokens = 9;
 }

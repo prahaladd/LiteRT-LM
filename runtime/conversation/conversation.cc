@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"  // from @com_google_absl
+#include "absl/container/flat_hash_set.h"  // from @com_google_absl
 #include "absl/functional/any_invocable.h"  // from @com_google_absl
 #include "absl/memory/memory.h"  // from @com_google_absl
 #include "absl/status/status.h"  // from @com_google_absl
@@ -51,7 +52,9 @@
 #include "runtime/engine/engine.h"
 #include "runtime/engine/engine_settings.h"
 #include "runtime/engine/io_types.h"
+#include "runtime/proto/llm_metadata.pb.h"
 #include "runtime/proto/llm_model_type.pb.h"
+#include "runtime/proto/token.pb.h"
 #include "runtime/util/model_type_utils.h"
 #include "runtime/util/status_macros.h"
 
@@ -158,6 +161,19 @@ absl::StatusOr<ConversationConfig> ConversationConfig::CreateInternal(
       return absl::InvalidArgumentError(
           "Custom channel must have a non-empty channel_name.");
     }
+  }
+
+  if (metadata.has_value() && !metadata->suppress_tokens().ids().empty()) {
+    // If suppress tokens are provided in the metadata, add them to the
+    // `suppress_tokens_config`.
+    absl::flat_hash_set<int> suppress_tokens =
+        suppress_tokens_config.suppress_tokens();
+
+    suppress_tokens.insert(metadata->suppress_tokens().ids().cbegin(),
+                              metadata->suppress_tokens().ids().cend());
+
+    suppress_tokens_config =
+        SuppressTokensConfig(std::move(suppress_tokens));
   }
 
   DataProcessorConfig processor_config;
