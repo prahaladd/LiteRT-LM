@@ -36,6 +36,7 @@ cc_binary(
         "@nlohmann_json//:json",
         "@litert//litert/c/internal:litert_logging",
         "@litert//litert/cc/internal:scoped_file",
+        "@litert//litert/runtime/accelerators:gpu_registry",
         "//runtime/components:model_resources",
         "//runtime/components:prompt_template",
         "//runtime/conversation",
