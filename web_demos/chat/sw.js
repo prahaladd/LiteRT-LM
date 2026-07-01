@@ -1,23 +1,41 @@
+// Copyright 2026 The ODML Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 const CACHE_NAME = 'litertlm-chat-shell-v1';
 
-self.addEventListener('install', (e) => {
+const scope = /** @type {!ServiceWorkerGlobalScope} */ (self);
+
+scope.addEventListener('install', (e) => {
   // Claim client instantly without waiting for refresh
-  self.skipWaiting();
+  scope.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(clients.claim());
+scope.addEventListener('activate', (e) => {
+  const event = /** @type {!ExtendableEvent} */ (e);
+  event.waitUntil(scope.clients.claim());
 });
 
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
-  
+scope.addEventListener('fetch', (e) => {
+  const event = /** @type {!FetchEvent} */ (e);
+  const url = new URL(event.request.url);
+
   // Only intercept GET requests
-  if (e.request.method !== 'GET') {
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // 1. STRICTLY IGNORE giant model weight files (.litertlm)
+  // 1. Ignore giant model weight files (.litertlm)
   // Caching gigabytes inside Service Worker Cache causes performance bottlenecks and storage exhaustion.
   // Model caching is already managed efficiently in main.ts inside a distinct Chrome Cache Storage bucket.
   if (url.pathname.endsWith('.litertlm')) {
@@ -27,21 +45,21 @@ self.addEventListener('fetch', (e) => {
   // 2. Intercept local UI shell requests with Network-First strategy
   // Prioritizes network fetches so developers and users receive updates instantly on reload,
   // falling back strictly to local shell caches when offline.
-  e.respondWith(
-    fetch(e.request)
+  event.respondWith(
+    fetch(event.request)
       .then((response) => {
         // Cache local origin resources dynamically on the fly
-        if (response.status === 200 && url.origin === self.location.origin) {
+        if (response.status === 200 && url.origin === scope.location.origin) {
           const cacheCopy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, cacheCopy);
+          scope.caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, cacheCopy);
           });
         }
         return response;
       })
       .catch((err) => {
         console.log('[PWA SW] Network failed or offline, falling back to cache for:', url.pathname);
-        return caches.match(e.request).then((cachedResponse) => {
+        return scope.caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
             return cachedResponse;
           }
