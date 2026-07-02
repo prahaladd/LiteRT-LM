@@ -57,6 +57,7 @@ describe('litert-sidebar', () => {
     mockSettings.topK = 40;
     mockSettings.samplerType = 'top_k';
     mockSettings.enableThinking = false;
+    mockSettings.customModels = [];
 
     cachedModelsMap = new Map<string, number>();
     downloadProgressMap = new Map<string, number>();
@@ -101,7 +102,7 @@ describe('litert-sidebar', () => {
     expect(dropdown).toBeTruthy();
 
     const items = element.shadowRoot!.querySelectorAll('.dropdown-item');
-    expect(items.length).toBe(MODELS.length);
+    expect(items.length).toBe(MODELS.length + 1);
     expect(items[0]!.querySelector('.model-name')!.textContent!.trim()).toBe(MODELS[0]!.name);
   });
 

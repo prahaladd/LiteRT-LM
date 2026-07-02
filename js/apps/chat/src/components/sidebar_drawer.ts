@@ -20,7 +20,7 @@ import {css, html, LitElement} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
 
 import {LlmChatStateController} from '../state_controller.js';
-import {MODELS, PartialSettingsSchema, Settings} from '../stores/settings_store.js';
+import {CustomModel, MODELS, PartialSettingsSchema, Settings} from '../stores/settings_store.js';
 import {sharedStyles} from '../styles/shared_styles.js';
 
 /* tslint:disable:no-new-decorators */
@@ -268,6 +268,10 @@ export class LitertSidebar extends LitElement {
 
   private handleModelChange(e: CustomEvent<string>) {
     const path = e.detail;
+    if (path === 'upload') {
+      this.triggerFileUpload();
+      return;
+    }
     if (this.state.settings.selectedModelPath !== path) {
       this.state.settings.selectedModelPath = path;
       this.state.settings.saveSettings();
@@ -277,6 +281,26 @@ export class LitertSidebar extends LitElement {
         await this.state.chatSession.createConversationSession();
       });
     }
+  }
+
+  private triggerFileUpload() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.litertlm';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        try {
+          await this.state.modelLoader.importCustomModel(file);
+          await this.state.modelLoader.loadModelWeights(async () => {
+            await this.state.chatSession.createConversationSession();
+          });
+        } catch (e) {
+          console.error('[LiteRT-LM] Failed to import/load custom model:', e);
+        }
+      }
+    };
+    input.click();
   }
 
   private handleRemoveCached(e: Event, modelPath: string) {
@@ -317,6 +341,7 @@ export class LitertSidebar extends LitElement {
   override render() {
     const activeModelFilename =
         this.state.settings.selectedModelPath.split('/').pop() || '';
+    const allModels = [...MODELS, ...this.state.settings.customModels];
 
     return html`
       <!-- Model Selection Group -->
@@ -331,7 +356,7 @@ export class LitertSidebar extends LitElement {
           .value=${this.state.settings.selectedModelPath}
           @change=${this.handleModelChange}
         >
-          ${MODELS.map(model => {
+          ${allModels.map(model => {
       const cachedSizeBytes =
           this.state.modelLoader.cachedModels.get(model.filename);
       const downloadProgress =
@@ -357,12 +382,15 @@ export class LitertSidebar extends LitElement {
                   </span>
                 ` :
                                                html`
-                  <span class="download-badge" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.65;">Download (${
-                                                   model.size})</span>
+                  <span class="download-badge" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.65;">${model.path.startsWith('https://local-model/') ? 'Local' : `Download (${model.size})`}</span>
                 `}
               </div>
             `;
     })}
+          <div class="dropdown-item" data-value="upload" style="border-top: 1px dashed var(--border); margin-top: 4px; color: var(--teal);">
+            <span class="model-name">Upload custom model (.litertlm)...</span>
+            <span style="font-size: 0.8rem;">⬆</span>
+          </div>
         </custom-dropdown>
 
         <!-- Compact inline Caching size display & Clear All link -->

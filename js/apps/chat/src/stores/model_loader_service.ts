@@ -18,7 +18,7 @@ import {Backend, Engine, getOrLoadGlobalLiteRtLm, GpuArtisanConfig} from '@liter
 
 import {teeStream} from '../tee_stream.js';
 
-import {SettingsStore} from './settings_store.js';
+import {CustomModel, SettingsStore} from './settings_store.js';
 
 /**
  * Service responsible for downloading, caching, and building the GPU WASM
@@ -82,6 +82,12 @@ export class ModelLoaderService {
       const deleted = await cache.delete(modelPath);
       if (deleted) {
         this.updateStatus('Model cache removed successfully.');
+
+        if (modelPath.startsWith('https://local-model/')) {
+          this.settings.customModels = this.settings.customModels.filter(m => m.path !== modelPath);
+          this.settings.saveSettings();
+        }
+
         await this.updateCacheSize();
 
         if (this.settings.selectedModelPath === modelPath) {
@@ -195,6 +201,8 @@ export class ModelLoaderService {
             });
 
         modelInput = progressStream;
+      } else if (modelPath.startsWith('https://local-model/')) {
+        throw new Error('Local model file not found in cache. Please re-upload the file.');
       } else {
         this.updateStatus(`Downloading weights (${modelFilename})...`);
 
@@ -297,6 +305,52 @@ export class ModelLoaderService {
     } finally {
       this.downloadAbortController = null;
     }
+  }
+
+  async importCustomModel(file: File): Promise<string> {
+    const path = `https://local-model/${file.name}`;
+    const cache = await window.caches.open('litertlm-models');
+    
+    this.updateStatus(`Importing local model ${file.name}...`);
+    this.isModelLoading = true;
+    this.updateCallback();
+
+    try {
+      const response = new Response(file, {
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': file.size.toString(),
+        }
+      });
+      await cache.put(path, response);
+      
+      const customModel: CustomModel = {
+        name: file.name.replace(/\.litertlm$/, ''),
+        filename: file.name,
+        path: path,
+        size: `${(file.size / 1e9).toFixed(2)} GB`
+      };
+      
+      const exists = this.settings.customModels.some(m => m.path === path);
+      if (!exists) {
+        this.settings.customModels = [...this.settings.customModels, customModel];
+      }
+      
+      this.settings.selectedModelPath = path;
+      this.settings.saveSettings();
+      
+      await this.updateCacheSize();
+      this.updateStatus(`Local model ${file.name} imported.`);
+      
+    } catch (e) {
+      console.error('[LiteRT-LM] Failed to import custom model:', e);
+      this.updateStatus(`Failed to import model: ${(e as Error).message}`);
+      throw e;
+    } finally {
+      this.isModelLoading = false;
+      this.updateCallback();
+    }
+    return path;
   }
 
   cancelDownload() {

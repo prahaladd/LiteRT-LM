@@ -266,4 +266,70 @@ describe('ModelLoaderService', () => {
     expect(modelLoader.isModelLoading).toBeFalse();
     expect(latestStatus).toBe('Model download cancelled by user.');
   });
+
+  it('imports custom model correctly', async () => {
+    const mockCache = {
+      put: jasmine.createSpy().and.resolveTo(true)
+    };
+    spyOn(window.caches, 'open').and.resolveTo(mockCache as unknown as Cache);
+    spyOn(modelLoader, 'updateCacheSize').and.resolveTo();
+    spyOn(settingsStore, 'saveSettings').and.callThrough();
+
+    const file = new File(['model data'], 'custom-model.litertlm', {type: 'application/octet-stream'});
+    const path = await modelLoader.importCustomModel(file);
+
+    expect(path).toBe('https://local-model/custom-model.litertlm');
+    expect(window.caches.open).toHaveBeenCalledWith('litertlm-models');
+    expect(mockCache.put).toHaveBeenCalled();
+    expect(settingsStore.customModels.length).toBe(1);
+    expect(settingsStore.customModels[0]!.name).toBe('custom-model');
+    expect(settingsStore.selectedModelPath).toBe(path);
+    expect(settingsStore.saveSettings).toHaveBeenCalled();
+    expect(modelLoader.updateCacheSize).toHaveBeenCalled();
+  });
+
+  it('loadModelWeights fails if local model is not in cache', async () => {
+    settingsStore.selectedModelPath = 'https://local-model/missing-model.litertlm';
+
+    const mockCache = {
+      match: jasmine.createSpy().and.resolveTo(undefined)
+    };
+    spyOn(window.caches, 'open').and.resolveTo(mockCache as unknown as Cache);
+    spyOn(window, 'fetch');
+
+    const onModelLoaded = jasmine.createSpy('onModelLoaded').and.resolveTo();
+
+    await modelLoader.loadModelWeights(onModelLoaded);
+
+    expect(window.caches.open).toHaveBeenCalledWith('litertlm-models');
+    expect(mockCache.match).toHaveBeenCalledWith('https://local-model/missing-model.litertlm');
+    expect(window.fetch).not.toHaveBeenCalled();
+    expect(modelLoader.engine).toBeNull();
+    expect(onModelLoaded).not.toHaveBeenCalled();
+    expect(modelLoader.isModelLoading).toBeFalse();
+  });
+
+  it('deletes local model from cache and settings when confirmed', async () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    const mockCache = {delete: jasmine.createSpy().and.resolveTo(true)};
+    spyOn(window.caches, 'open').and.resolveTo(mockCache as unknown as Cache);
+    spyOn(modelLoader, 'updateCacheSize').and.resolveTo();
+    spyOn(settingsStore, 'saveSettings').and.callThrough();
+
+    settingsStore.customModels = [{
+      name: 'Local Model',
+      filename: 'local-model.litertlm',
+      path: 'https://local-model/local-model.litertlm',
+      size: '1.0 GB'
+    }];
+
+    await modelLoader.deleteModelFromCache('https://local-model/local-model.litertlm');
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(window.caches.open).toHaveBeenCalledWith('litertlm-models');
+    expect(mockCache.delete).toHaveBeenCalledWith('https://local-model/local-model.litertlm');
+    expect(settingsStore.customModels.length).toBe(0);
+    expect(settingsStore.saveSettings).toHaveBeenCalled();
+    expect(modelLoader.updateCacheSize).toHaveBeenCalled();
+  });
 });

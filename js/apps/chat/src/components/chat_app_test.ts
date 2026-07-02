@@ -67,6 +67,7 @@ describe('litert-lm-chat-app', () => {
     mockSettings.topK = 40;
     mockSettings.samplerType = 'greedy';
     mockSettings.enableThinking = false;
+    mockSettings.customModels = [];
 
     mockModelLoader = jasmine.createSpyObj('ModelLoaderService', [
       'loadModelWeights',
