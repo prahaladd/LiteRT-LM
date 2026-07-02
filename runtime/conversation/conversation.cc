@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"  // from @com_google_absl
+#include "absl/container/flat_hash_set.h"  // from @com_google_absl
 #include "absl/functional/any_invocable.h"  // from @com_google_absl
 #include "absl/memory/memory.h"  // from @com_google_absl
 #include "absl/status/status.h"  // from @com_google_absl
@@ -38,6 +39,7 @@
 #include "runtime/components/logits_processor/constrained_decoding/constraint_provider.h"
 #include "runtime/components/logits_processor/constrained_decoding/constraint_provider_config.h"
 #include "runtime/components/logits_processor/constrained_decoding/constraint_provider_factory.h"
+#include "runtime/components/logits_processor/no_repeat_ngram_config.h"
 #include "runtime/components/logits_processor/repetition_penalty_config.h"
 #include "runtime/components/logits_processor/suppress_tokens_config.h"
 #include "runtime/components/prompt_template.h"
@@ -51,7 +53,9 @@
 #include "runtime/engine/engine.h"
 #include "runtime/engine/engine_settings.h"
 #include "runtime/engine/io_types.h"
+#include "runtime/proto/llm_metadata.pb.h"
 #include "runtime/proto/llm_model_type.pb.h"
+#include "runtime/proto/token.pb.h"
 #include "runtime/util/model_type_utils.h"
 #include "runtime/util/status_macros.h"
 
@@ -109,6 +113,7 @@ absl::StatusOr<ConversationConfig> ConversationConfig::CreateInternal(
     bool enable_thinking, bool stream_tool_calls,
     const std::string& stream_tool_calls_channel_name,
     RepetitionPenaltyConfig repetition_penalty_config,
+    NoRepeatNgramConfig no_repeat_ngram_config,
     SuppressTokensConfig suppress_tokens_config) {
   if (preface.has_value() && !std::holds_alternative<JsonPreface>(*preface)) {
     return absl::InvalidArgumentError("Only JsonPreface is supported for now.");
@@ -160,6 +165,15 @@ absl::StatusOr<ConversationConfig> ConversationConfig::CreateInternal(
     }
   }
 
+  // Only update the suppress tokens config if there is a suppress tokens list
+  // in the metadata and the suppress tokens config is not already set.
+  if (metadata.has_value() && !metadata->suppress_tokens().ids().empty() &&
+      !suppress_tokens_config.enabled()) {
+    suppress_tokens_config = SuppressTokensConfig(
+        absl::flat_hash_set<int>(metadata->suppress_tokens().ids().cbegin(),
+                                 metadata->suppress_tokens().ids().cend()));
+  }
+
   DataProcessorConfig processor_config;
   if (overwrite_processor_config.has_value()) {
     // Use the overwrite processor config if provided.
@@ -178,7 +192,7 @@ absl::StatusOr<ConversationConfig> ConversationConfig::CreateInternal(
       filter_channel_content_from_kv_cache, return_error_on_parse_failure,
       return_error_on_max_tokens_reached, enable_thinking, stream_tool_calls,
       stream_tool_calls_channel_name, std::move(repetition_penalty_config),
-      std::move(suppress_tokens_config));
+      std::move(no_repeat_ngram_config), std::move(suppress_tokens_config));
 }
 
 absl::StatusOr<std::string>
@@ -302,6 +316,7 @@ absl::StatusOr<DecodeConfig> Conversation::CreateDecodeConfig(
   auto decode_config = DecodeConfig::CreateDefault();
 
   decode_config.SetRepetitionPenaltyConfig(config_.repetition_penalty_config());
+  decode_config.SetNoRepeatNgramConfig(config_.no_repeat_ngram_config());
   decode_config.SetSuppressTokensConfig(config_.suppress_tokens_config());
 
   if (max_output_tokens.has_value()) {

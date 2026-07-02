@@ -30,6 +30,7 @@
 #include "absl/time/time.h"  // from @com_google_absl
 #include "support/util/io_types.h"  // from @litert
 #include "runtime/components/logits_processor/constrained_decoding/constraint.h"
+#include "runtime/components/logits_processor/no_repeat_ngram_config.h"
 #include "runtime/components/logits_processor/repetition_penalty_config.h"
 #include "runtime/components/logits_processor/suppress_tokens_config.h"
 #include "runtime/proto/engine.pb.h"
@@ -320,6 +321,17 @@ class DecodeConfig {
     return repetition_penalty_config_;
   }
 
+  // Sets the no repeat ngram config to ban repetitive ngrams during decoding.
+  void SetNoRepeatNgramConfig(
+      const NoRepeatNgramConfig& no_repeat_ngram_config) {
+    no_repeat_ngram_config_ = no_repeat_ngram_config;
+  }
+
+  // Returns the no repeat ngram config.
+  NoRepeatNgramConfig GetNoRepeatNgramConfig() const {
+    return no_repeat_ngram_config_;
+  }
+
   // Sets the suppress tokens config to suppress specific tokens during
   // decoding.
   void SetSuppressTokensConfig(
@@ -355,6 +367,7 @@ class DecodeConfig {
 
   RepetitionPenaltyConfig repetition_penalty_config_ =
       RepetitionPenaltyConfig::Default();
+  NoRepeatNgramConfig no_repeat_ngram_config_ = NoRepeatNgramConfig::Default();
   SuppressTokensConfig suppress_tokens_config_ =
       SuppressTokensConfig::Default();
   Constraint* absl_nullable constraint_ = nullptr;

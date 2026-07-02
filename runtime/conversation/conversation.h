@@ -33,6 +33,7 @@
 #include "runtime/components/logits_processor/constrained_decoding/constraint.h"
 #include "runtime/components/logits_processor/constrained_decoding/constraint_provider.h"
 #include "runtime/components/logits_processor/constrained_decoding/constraint_provider_config.h"
+#include "runtime/components/logits_processor/no_repeat_ngram_config.h"
 #include "runtime/components/logits_processor/repetition_penalty_config.h"
 #include "runtime/components/logits_processor/suppress_tokens_config.h"
 #include "runtime/components/prompt_template.h"
@@ -118,6 +119,11 @@ class ConversationConfig {
   // Returns the repetition penalty config for the repetition penalty processor.
   const RepetitionPenaltyConfig& repetition_penalty_config() const {
     return repetition_penalty_config_;
+  }
+
+  // Returns the no repeat ngram config for the no repeat ngram processor.
+  const NoRepeatNgramConfig& no_repeat_ngram_config() const {
+    return no_repeat_ngram_config_;
   }
 
   // Returns the suppress tokens config for the suppress tokens processor.
@@ -243,6 +249,13 @@ class ConversationConfig {
       return *this;
     }
 
+    // Sets the no repeat ngram config for the no repeat ngram processor.
+    Builder& SetNoRepeatNgramConfig(
+        NoRepeatNgramConfig no_repeat_ngram_config) {
+      no_repeat_ngram_config_ = std::move(no_repeat_ngram_config);
+      return *this;
+    }
+
     // Sets the suppress tokens config for the suppress tokens processor.
     Builder& SetSuppressTokensConfig(
         SuppressTokensConfig suppress_tokens_config) {
@@ -258,7 +271,8 @@ class ConversationConfig {
           filter_channel_content_from_kv_cache_, return_error_on_parse_failure_,
           return_error_on_max_tokens_reached_, enable_thinking_,
           stream_tool_calls_, stream_tool_calls_channel_name_,
-          repetition_penalty_config_, suppress_tokens_config_);
+          repetition_penalty_config_, no_repeat_ngram_config_,
+          suppress_tokens_config_);
     }
 
     // Returns a unique pointer to a ConversationConfig.
@@ -285,6 +299,8 @@ class ConversationConfig {
     std::string stream_tool_calls_channel_name_ = "tool_call";
     RepetitionPenaltyConfig repetition_penalty_config_ =
         RepetitionPenaltyConfig::Default();
+    NoRepeatNgramConfig no_repeat_ngram_config_ =
+        NoRepeatNgramConfig::Default();
     SuppressTokensConfig suppress_tokens_config_ =
         SuppressTokensConfig::Default();
   };
@@ -323,6 +339,8 @@ class ConversationConfig {
   // - `channels`: The channels configured for the conversation.
   // - `repetition_penalty_config`: The configuration for the repetition penalty
   //     processor.
+  // - `no_repeat_ngram_config`: The configuration for the no repeat ngram
+  //     processor.
   // - `suppress_tokens_config`: The configuration for the suppress tokens
   //     processor.
   static absl::StatusOr<ConversationConfig> CreateInternal(
@@ -343,6 +361,8 @@ class ConversationConfig {
       const std::string& stream_tool_calls_channel_name = "tool_call",
       RepetitionPenaltyConfig repetition_penalty_config =
           RepetitionPenaltyConfig::Default(),
+      NoRepeatNgramConfig no_repeat_ngram_config =
+          NoRepeatNgramConfig::Default(),
       SuppressTokensConfig suppress_tokens_config =
           SuppressTokensConfig::Default());
 
@@ -361,6 +381,8 @@ class ConversationConfig {
       const std::string& stream_tool_calls_channel_name = "tool_call",
       RepetitionPenaltyConfig repetition_penalty_config =
           RepetitionPenaltyConfig::Default(),
+      NoRepeatNgramConfig no_repeat_ngram_config =
+          NoRepeatNgramConfig::Default(),
       SuppressTokensConfig suppress_tokens_config =
           SuppressTokensConfig::Default())
       : session_config_(std::move(session_config)),
@@ -379,6 +401,7 @@ class ConversationConfig {
         stream_tool_calls_(stream_tool_calls),
         stream_tool_calls_channel_name_(stream_tool_calls_channel_name),
         repetition_penalty_config_(std::move(repetition_penalty_config)),
+        no_repeat_ngram_config_(std::move(no_repeat_ngram_config)),
         suppress_tokens_config_(std::move(suppress_tokens_config)) {}
 
   SessionConfig session_config_;
@@ -396,6 +419,7 @@ class ConversationConfig {
   bool stream_tool_calls_;
   std::string stream_tool_calls_channel_name_;
   RepetitionPenaltyConfig repetition_penalty_config_;
+  NoRepeatNgramConfig no_repeat_ngram_config_;
   SuppressTokensConfig suppress_tokens_config_;
 };
 
