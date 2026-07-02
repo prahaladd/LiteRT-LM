@@ -103,6 +103,7 @@ pytype_strict_library(
     deps = [
         ":litertlm_core",
         ":litertlm_header_schema_py",
+        ":litertlm_peek",
         "@flatbuffers//:runtime_py",
         "//runtime/proto:llm_metadata_py_pb2",
         "@com_google_protobuf//:protobuf_python",
@@ -117,6 +118,7 @@ py_test(
     deps = [
         ":litertlm_builder",
         ":litertlm_core",
+        ":litertlm_header_schema_py",
         ":litertlm_peek",
         "//runtime/proto:llm_metadata_py_pb2",
         "@absl_py//absl/testing:absltest",

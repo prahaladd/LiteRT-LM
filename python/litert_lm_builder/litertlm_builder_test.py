@@ -21,6 +21,7 @@ from absl.testing import parameterized
 from google.protobuf import text_format
 from litert_lm_builder import litertlm_builder
 from litert_lm_builder import litertlm_core
+from litert_lm_builder import litertlm_header_schema_py_generated as schema
 from litert_lm_builder import litertlm_peek
 from runtime.proto import llm_metadata_pb2
 
@@ -600,6 +601,37 @@ class LitertlmBuilderTest(parameterized.TestCase):
     self.assertIn("Sections (1)", ss)
     self.assertIn("Data Type:    TFLiteModel", ss)
     self.assertIn("Key: prefer_activation_type, Value (String): int8", ss)
+
+  def test_unpack(self):
+    """Tests unpacking a litertlm file using standalone unpack and classmethod unpack."""
+    builder = litertlm_builder.LitertLmFileBuilder()
+    self._add_system_metadata(builder)
+    tflite_path = self._create_dummy_file("model.tflite", b"dummy content")
+    builder.add_tflite_model(
+        tflite_path, litertlm_builder.TfLiteModelType.PREFILL_DECODE
+    )
+    litertlm_path = os.path.join(self.temp_dir, "test.litertlm")
+    with litertlm_core.open_file(litertlm_path, "wb") as f:
+      builder.build(f)
+
+    unpack_dir = os.path.join(self.temp_dir, "unpacked")
+    toml_path = litertlm_builder.unpack(litertlm_path, unpack_dir)
+    self.assertTrue(os.path.exists(toml_path))
+
+    cls_unpack_dir = os.path.join(self.temp_dir, "unpacked_cls")
+    rebuilt_builder = litertlm_builder.LitertLmFileBuilder.unpack(
+        litertlm_path, cls_unpack_dir
+    )
+    self.assertIsNotNone(rebuilt_builder)
+    self.assertLen(rebuilt_builder._sections, 1)
+    self.assertEqual(
+        rebuilt_builder._sections[0].data_type,
+        schema.AnySectionDataType.TFLiteModel,
+    )
+    rebuild_path = os.path.join(self.temp_dir, "rebuilt.litertlm")
+    with litertlm_core.open_file(rebuild_path, "wb") as f:
+      rebuilt_builder.build(f)
+    self.assertTrue(os.path.exists(rebuild_path))
 
 
 if __name__ == "__main__":

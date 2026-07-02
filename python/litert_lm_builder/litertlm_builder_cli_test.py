@@ -367,6 +367,25 @@ class LiteRTLMBuilderCLITest(absltest.TestCase):
         stdout,
     )
 
+  def test_unpack_command(self):
+    """Tests that a LiteRT-LM file can be unpacked via CLI."""
+    args = ["system_metadata", "--str", "author", "ODML Team"]
+    litertlm_path = self._run_command(*args)
+    self.assertTrue(os.path.exists(litertlm_path))
+
+    unpack_dir = os.path.join(self.temp_dir, "unpacked_cli")
+    command = [
+        self._get_command_path(),
+        "unpack",
+        "--input",
+        litertlm_path,
+        "--output",
+        unpack_dir,
+    ]
+    subprocess.run(command, check=True, capture_output=True)
+    toml_path = os.path.join(unpack_dir, "model.toml")
+    self.assertTrue(os.path.exists(toml_path))
+
 
 if __name__ == "__main__":
   absltest.main()

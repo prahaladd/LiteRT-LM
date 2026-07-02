@@ -23,6 +23,8 @@ DType = litertlm_builder.DType
 TfLiteModelType = litertlm_builder.TfLiteModelType
 Backend = litertlm_builder.Backend
 peek_litertlm_file = litertlm_peek.peek_litertlm_file
+unpack = litertlm_builder.unpack
+unpack_litertlm_file = litertlm_builder.unpack_litertlm_file
 
 __all__ = [
     "LitertLmFileBuilder",
@@ -31,4 +33,6 @@ __all__ = [
     "TfLiteModelType",
     "Backend",
     "peek_litertlm_file",
+    "unpack",
+    "unpack_litertlm_file",
 ]

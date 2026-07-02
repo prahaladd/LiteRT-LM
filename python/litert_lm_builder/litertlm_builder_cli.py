@@ -92,6 +92,7 @@ _SUBCOMMANDS = (
     "sp_tokenizer",
     "hf_tokenizer",
     "output",
+    "unpack",
 )
 
 
@@ -292,6 +293,32 @@ def _add_output_path_parser(subparsers) -> None:
   )
 
 
+def _add_unpack_parser(subparsers) -> None:
+  """Adds a parser for unpacking a LiteRT-LM file to the subparsers."""
+  unpack_parser = subparsers.add_parser(
+      "unpack",
+      description="Unpack a LiteRT-LM file into an output directory.",
+      help="Unpack a LiteRT-LM file.",
+  )
+  unpack_parser.add_argument(
+      "--input",
+      "--path",
+      "--litertlm_file",
+      dest="input_path",
+      type=str,
+      required=True,
+      help="The path to the input LiteRT-LM file to unpack.",
+  )
+  unpack_parser.add_argument(
+      "--output",
+      "--output_dir",
+      dest="output_dir",
+      type=str,
+      required=True,
+      help="The directory where unpacked files and model.toml will be saved.",
+  )
+
+
 def _build_parser() -> argparse.ArgumentParser:
   """Builds an argument parser for the litertlm_builder tool."""
   parser = argparse.ArgumentParser(
@@ -306,6 +333,7 @@ def _build_parser() -> argparse.ArgumentParser:
   _add_sentencepiece_tokenizer_parser(subparsers)
   _add_hf_tokenizer_parser(subparsers)
   _add_output_path_parser(subparsers)
+  _add_unpack_parser(subparsers)
 
   return parser
 
@@ -462,7 +490,21 @@ def _build_hf_tokenizer(
 
 
 def _build_litertlm_file(parsed_args: list[argparse.Namespace]) -> None:
-  """Builds a LiteRT-LM file from the parsed arguments."""
+  """Builds or unpacks a LiteRT-LM file from the parsed arguments."""
+  if "unpack" in [pa.command for pa in parsed_args]:
+    if len(parsed_args) != 1:
+      raise ValueError(
+          "The 'unpack' subcommand cannot be combined with other subcommands."
+      )
+    unpack_arg = parsed_args[0]
+    toml_path = litertlm_builder.unpack(
+        unpack_arg.input_path, unpack_arg.output_dir
+    )
+    print(
+        f"LiteRT-LM file successfully unpacked into {unpack_arg.output_dir}"
+        f" (TOML configuration saved at {toml_path})"
+    )
+    return
   if "toml" in [pa.command for pa in parsed_args]:
     toml_path = None
     output_path = None
