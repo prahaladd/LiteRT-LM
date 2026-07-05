@@ -1,0 +1,54 @@
+[
+  {
+    "transcript": "Navigate to www.canva.com. If you're not already logged in, please sign into your account.",
+    "action": "navigate",
+    "selector": "",
+    "text": "https://www.canva.com"
+  },
+  {
+    "transcript": "Excellent. Now look at the left side of your screen. You'll see a vertical navigation menu. About halfway down you should see an option labeled \"canva-AI\" with a small \"AI\" icon next to it. Can everyone see that? Go ahead and click on \"canva-AI\"",
+    "action": "click",
+    "selector": "[aria-label=\"Canva AI\"]"
+  },
+  {
+    "transcript": "Perfect. You should now see a page that asks, \"What will you design today?\" This is Canvas AI Hub. Notice at the top there are three tabs, your designs, templates, and Canvas AI. Make sure Canvas AI is selected. It should be highlighted.",
+    "action": "click",
+    "selector": "[aria-label=\"Canva AI\"]"
+  },
+  {
+    "transcript": "Now, canva a I can help with several types of content. Look just below the tabs, you'll see five buttons, image, design, doc, code, and video clip. Today we're focusing on image generation, so click on the image button.",
+    "action": "click",
+    "selector": "[aria-label=\"Image\"]"
+  },
+  {
+    "transcript": "Click on the style drop-down. You'll see various artistic styles like photographic, digital art, or illustration.",
+    "action": "click",
+    "selector": "[aria-label=\"Style\"]"
+  },
+  {
+    "transcript": "For now, let's leave it on none, so the AI interprets our prompt naturally.",
+    "action": "click",
+    "selector": "[aria-label=\"Style\"]"
+  },
+  {
+    "transcript": "Now let's look at aspect ratio. Click on the 16 by 9 drop-down.",
+    "action": "click",
+    "selector": "[aria-label=\"Aspect Ratio\"]"
+  },
+  {
+    "transcript": "For our demonstration, let's keep it at 16 by 9.",
+    "action": "click",
+    "selector": "[id$=\"--1\"]"
+  },
+  {
+    "transcript": "Let's try an example. I'm going to type MoonLitSundset.",
+    "action": "type_text",
+    "selector": "[aria-label=\"Describe your idea, and I’ll bring it to life\"]",
+    "text": "MoonLitSundset"
+  },
+  {
+    "transcript": "Alright, we're ready. Look at the right side of the text input field for the purple circular button with an arrow. Notice it only becomes active once you've entered text. I'm going to click it now.",
+    "action": "click",
+    "selector": "[aria-label=\"Submit\"]"
+  }
+]

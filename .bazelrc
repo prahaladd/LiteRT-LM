@@ -555,3 +555,6 @@ build:hermetic_linux --cxxopt=-std=c++17
 build:hermetic_linux --host_cxxopt=-std=c++17
 build:hermetic_linux --repo_env=SYSROOT_DIST=linux_glibc_2_31
 
+build --macos_sdk_version=26.2
+build --macos_minimum_os=26.2
+build --host_macos_minimum_os=26.2

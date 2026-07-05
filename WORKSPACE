@@ -15,6 +15,16 @@ TENSORFLOW_SHA256 = "18a1dc7c4d2c6eccf79b30fc2bc31ec16891ff511a2e7e37afdd25b13d9
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 
+# Use recent platoforms version to support uefi platform.
+http_archive(
+    name = "platforms",
+    sha256 = "3384eb1c30762704fbe38e440204e114154086c8fc8a8c2e3e28441028c019a8",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/1.0.0/platforms-1.0.0.tar.gz",
+        "https://github.com/bazelbuild/platforms/releases/download/1.0.0/platforms-1.0.0.tar.gz",
+    ],
+)
+
 http_archive(
     name = "rules_shell",
     sha256 = "bc61ef94facc78e20a645726f64756e5e285a045037c7a61f65af2941f4c25e1",
@@ -32,16 +42,6 @@ http_archive(
     name = "rules_platform",
     sha256 = "0aadd1bd350091aa1f9b6f2fbcac8cd98201476289454e475b28801ecf85d3fd",
     url = "https://github.com/bazelbuild/rules_platform/releases/download/0.1.0/rules_platform-0.1.0.tar.gz",
-)
-
-# Use recent platoforms version to support uefi platform.
-http_archive(
-    name = "platforms",
-    sha256 = "3384eb1c30762704fbe38e440204e114154086c8fc8a8c2e3e28441028c019a8",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/1.0.0/platforms-1.0.0.tar.gz",
-        "https://github.com/bazelbuild/platforms/releases/download/1.0.0/platforms-1.0.0.tar.gz",
-    ],
 )
 
 # Use 3.22.0 (from 3.5.1 of tensorflow) to fix binary signing issue on MacOS Tahoe.

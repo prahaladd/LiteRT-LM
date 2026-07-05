@@ -1,0 +1,18 @@
+# Compiled binaries
+vad_operator
+calibrate_interactive
+
+# Local dynamic profiling
+*.profraw
+
+# Temporary and profile directories
+chrome_profile/
+chunks/
+last_snapshot_raw.json
+
+# Exclude entire staging directory
+staging/
+
+# Wav test files
+explainer_audio_16k.wav
+explainer_video_ultra_long_16k.wav
