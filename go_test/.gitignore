@@ -10,8 +10,9 @@ chrome_profile/
 chunks/
 last_snapshot_raw.json
 
-# Exclude entire staging directory
+# Exclude entire staging and output directories
 staging/
+output/
 
 # Wav test files
 explainer_audio_16k.wav
