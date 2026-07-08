@@ -26,7 +26,7 @@ export CGO_LDFLAGS="-L$(pwd)/staging"
 # Export dynamic library runtime search paths for macOS
 export DYLD_LIBRARY_PATH="$(pwd)/staging:/Users/prahaladd/Projects/litelmrt/libs/litert_lm_binaries:$DYLD_LIBRARY_PATH"
 
-if go run vad_operator.go "$WAV_SRC"; then
+if go run -ldflags="-extldflags '-Wl,-rpath,$(pwd)/staging -Wl,-rpath,/Users/prahaladd/Projects/litelmrt/libs/litert_lm_binaries'" vad_operator.go "$WAV_SRC"; then
     echo "Operator execution completed successfully."
 else
     echo "Operator execution failed."
