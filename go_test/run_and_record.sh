@@ -17,7 +17,15 @@ echo "FFmpeg started with PID $FFMPEG_PID. Allowing 2 seconds to initialize..."
 sleep 2
 
 echo "=== 2. Running Local VAD Browser Operator ==="
-# Run the local operator loop
+# Export CGo header include paths
+export CGO_CFLAGS="-I$(pwd)/staging/whisper.cpp/include -I$(pwd)/staging/whisper.cpp/ggml/include -I$(pwd)/staging/onnxruntime-osx-arm64-1.19.2/include"
+
+# Export CGo library linking path
+export CGO_LDFLAGS="-L$(pwd)/staging"
+
+# Export dynamic library runtime search paths for macOS
+export DYLD_LIBRARY_PATH="$(pwd)/staging:/Users/prahaladd/Projects/litelmrt/libs/litert_lm_binaries:$DYLD_LIBRARY_PATH"
+
 if go run vad_operator.go "$WAV_SRC"; then
     echo "Operator execution completed successfully."
 else
