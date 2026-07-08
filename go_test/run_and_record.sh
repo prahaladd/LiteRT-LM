@@ -10,7 +10,7 @@ FINAL_VIDEO="/tmp/explainer_recording.mp4"
 
 echo "=== 1. Starting Screen-Only Recording in Background ==="
 # Launch FFmpeg silently capturing only the screen
-ffmpeg -y -f avfoundation -framerate 30 -i "$SCREEN_INDEX" -vf "scale=1280:-2" -c:v libx264 -preset ultrafast -pix_fmt yuv420p "$TMP_VIDEO" > /tmp/ffmpeg_record.log 2>&1 &
+ffmpeg -y -f avfoundation -framerate 30 -i "${SCREEN_INDEX}:" -vf "scale=1280:-2" -c:v libx264 -preset ultrafast -pix_fmt yuv420p "$TMP_VIDEO" > /tmp/ffmpeg_record.log 2>&1 &
 FFMPEG_PID=$!
 
 echo "FFmpeg started with PID $FFMPEG_PID. Allowing 2 seconds to initialize..."
