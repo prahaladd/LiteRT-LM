@@ -125,3 +125,23 @@ LD_LIBRARY_PATH=staging/:../bazel-bin/c/litertlm_c_api/ ./vad_operator --fine-tu
 # 3. Playback & Record Screen (uses calibrated mappings)
 LD_LIBRARY_PATH=staging/:../bazel-bin/c/litertlm_c_api/ ./vad_operator explainer_video_ultra_long_16k.wav
 ```
+
+---
+
+## 9. FFmpeg Screen Recording Tuning for Older Laptops (e.g., Lenovo Z50-70)
+
+On older laptops with low-power dual-core CPUs (like the Core i5-4210U), recording the screen at high resolutions and framerates (e.g., 1080p 60fps) will saturate the CPU, causing lag and dropped frames in the video.
+
+To ensure smooth walkthrough recordings on this hardware:
+1. **Reduce Resolution to 720p**: Scale the input using `-vf "scale=1280:-2"`.
+2. **Cap Framerate at 30 FPS**: Force the capture device framerate using `-framerate 30`.
+3. **Use Ultrafast Preset**: Configure the H.264 encoder with `-preset ultrafast` to minimize CPU encoding cycles.
+
+### Configured Capture Command Example (Linux x11grab):
+```bash
+# Capture screen :0.0 at 30fps scaled to 1280x720 using minimal CPU preset
+ffmpeg -y -f x11grab -framerate 30 -video_size 1920x1080 -i :0.0 \
+       -vf "scale=1280:-2" -c:v libx264 -preset ultrafast -pix_fmt yuv420p \
+       output_screen.mp4
+```
+
