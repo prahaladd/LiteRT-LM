@@ -2,46 +2,23 @@
 set -e
 
 # Configuration
-SCREEN_INDEX="4"
-AUDIO_SRC="/Users/prahaladd/Projects/realtime-voice-browser/explainer_video_ultra_long.mp3"
 WAV_SRC="explainer_video_ultra_long_16k.wav"
-TMP_VIDEO="/tmp/screen_video_only.mp4"
-FINAL_VIDEO="/tmp/explainer_recording.mp4"
+OUT_NAME="${1:-my_custom_recording_name.mp4}"
+OUT_PATH="output/$OUT_NAME"
 
-echo "=== 1. Starting Screen-Only Recording in Background ==="
-# Launch FFmpeg silently capturing only the screen
-ffmpeg -y -f avfoundation -framerate 30 -i "${SCREEN_INDEX}:" -vf "scale=1280:-2" -c:v libx264 -preset ultrafast -pix_fmt yuv420p "$TMP_VIDEO" > /tmp/ffmpeg_record.log 2>&1 &
-FFMPEG_PID=$!
-
-echo "FFmpeg started with PID $FFMPEG_PID. Allowing 2 seconds to initialize..."
-sleep 2
-
-echo "=== 2. Running Local VAD Browser Operator ==="
-# Export CGo header include paths
-export CGO_CFLAGS="-I$(pwd)/staging/whisper.cpp/include -I$(pwd)/staging/whisper.cpp/ggml/include -I$(pwd)/staging/onnxruntime-osx-arm64-1.19.2/include"
-
-# Export CGo library linking path
-export CGO_LDFLAGS="-L$(pwd)/staging"
-
-# Export dynamic library runtime search paths for macOS
+# Export dynamic library runtime search paths for macOS and Linux
 export DYLD_LIBRARY_PATH="$(pwd)/staging:/Users/prahaladd/Projects/litelmrt/libs/litert_lm_binaries:$DYLD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$(pwd)/staging:/Users/prahaladd/Projects/litelmrt/libs/litert_lm_binaries:$LD_LIBRARY_PATH"
 
-if go run -ldflags="-extldflags '-Wl,-rpath,$(pwd)/staging -Wl,-rpath,/Users/prahaladd/Projects/litelmrt/libs/litert_lm_binaries'" vad_operator.go "$WAV_SRC"; then
-    echo "Operator execution completed successfully."
+CHROME_USER_DATA_DIR="/Users/prahaladd/Projects/litelmrt/LiteRT-LM/go_test/staging/chrome_dev_profile"
+CHROME_PROFILE_DIR="Jarvis"
+
+echo "=== Running Local VAD Browser Operator (Profile: $CHROME_PROFILE_DIR, Output: $OUT_PATH) ==="
+if ./vad_operator --output "$OUT_PATH" \
+                  --chrome-user-data-dir "$CHROME_USER_DATA_DIR" \
+                  --chrome-profile-dir "$CHROME_PROFILE_DIR" \
+                  "$WAV_SRC" "${@:2}"; then
+    echo "Walkthrough recording completed successfully: $OUT_PATH"
 else
-    echo "Operator execution failed."
+    echo "Walkthrough recording failed."
 fi
-
-echo "=== 3. Finalizing Screen Capture ==="
-# Send SIGINT to FFmpeg to write container headers gracefully
-kill -INT $FFMPEG_PID
-wait $FFMPEG_PID || true
-echo "Screen capture finalized."
-
-echo "=== 4. Multiplexing Pristine Audio ==="
-# Instant copy muxing of pristine audio file over the screen track
-ffmpeg -y -i "$TMP_VIDEO" -i "$AUDIO_SRC" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 "$FINAL_VIDEO" > /tmp/ffmpeg_mux.log 2>&1
-
-echo "=== Muxing Complete! ==="
-echo "Final recording saved to: $FINAL_VIDEO"
-rm -f "$TMP_VIDEO"

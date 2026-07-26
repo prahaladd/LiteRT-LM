@@ -1,54 +1,64 @@
 [
   {
-    "transcript": "Navigate to www.canva.com. If you're not already logged in, please sign into your account.",
+    "transcript": "Navigate to www.canva.com.",
     "action": "navigate",
     "selector": "",
-    "text": "https://www.canva.com"
+    "text": "https://www.canva.com",
+    "time_offset_ms": 0
   },
   {
-    "transcript": "Excellent. Now look at the left side of your screen. You'll see a vertical navigation menu. About halfway down you should see an option labeled \"canva-AI\" with a small \"AI\" icon next to it. Can everyone see that? Go ahead and click on \"canva-AI\"",
+    "transcript": "Go ahead and click on \"canva-AI\"",
     "action": "click",
-    "selector": "[aria-label=\"Canva AI\"]"
+    "selector": "[aria-label=\"Canva AI\"]",
+    "time_offset_ms": 17035
   },
   {
-    "transcript": "Perfect. You should now see a page that asks, \"What will you design today?\" This is Canvas AI Hub. Notice at the top there are three tabs, your designs, templates, and Canvas AI. Make sure Canvas AI is selected. It should be highlighted.",
+    "transcript": "click on the image button.",
     "action": "click",
-    "selector": "[aria-label=\"Canva AI\"]"
+    "selector": "[aria-label=\"Image\"]",
+    "time_offset_ms": 16078
   },
   {
-    "transcript": "Now, canva a I can help with several types of content. Look just below the tabs, you'll see five buttons, image, design, doc, code, and video clip. Today we're focusing on image generation, so click on the image button.",
+    "transcript": "Click on the style drop-down.",
     "action": "click",
-    "selector": "[aria-label=\"Image\"]"
+    "selector": "[aria-label=\"Style\"]",
+    "time_offset_ms": 0
   },
   {
-    "transcript": "Click on the style drop-down. You'll see various artistic styles like photographic, digital art, or illustration.",
+    "transcript": "Click on the style drop-down.",
     "action": "click",
-    "selector": "[aria-label=\"Style\"]"
+    "selector": "[aria-label=\"Style\"]",
+    "time_offset_ms": 991
   },
   {
-    "transcript": "For now, let's leave it on none, so the AI interprets our prompt naturally.",
+    "transcript": "Click on the 16 by 9 drop-down.",
     "action": "click",
-    "selector": "[aria-label=\"Style\"]"
+    "selector": "[aria-label=\"Aspect Ratio\"]",
+    "time_offset_ms": 18849
   },
   {
-    "transcript": "Now let's look at aspect ratio. Click on the 16 by 9 drop-down.",
+    "transcript": "Click on the 16 by 9 drop-down.",
     "action": "click",
-    "selector": "[aria-label=\"Aspect Ratio\"]"
+    "selector": "[id$=\"--1\"]",
+    "time_offset_ms": 19840
   },
   {
-    "transcript": "For our demonstration, let's keep it at 16 by 9.",
-    "action": "click",
-    "selector": "[id$=\"--1\"]"
-  },
-  {
-    "transcript": "Let's try an example. I'm going to type MoonLitSundset.",
+    "transcript": "I'm going to type MoonLitSundset.",
     "action": "type_text",
     "selector": "[aria-label=\"Describe your idea, and I’ll bring it to life\"]",
-    "text": "MoonLitSundset"
+    "text": "moonlit sunset in Hawaii",
+    "time_offset_ms": 1550
   },
   {
-    "transcript": "Alright, we're ready. Look at the right side of the text input field for the purple circular button with an arrow. Notice it only becomes active once you've entered text. I'm going to click it now.",
+    "transcript": "I'm going to click it now.",
     "action": "click",
-    "selector": "[aria-label=\"Submit\"]"
+    "selector": "[aria-label=\"Submit\"]",
+    "time_offset_ms": 11340
+  },
+  {
+    "transcript": "click \"Reuse Prompt\"",
+    "action": "click",
+    "selector": "#_r_1_ \u003e main.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x5yr21d.xh8yej3.xxtcm4k.D8aLlg \u003e div.vWxNmw \u003e div.xzANJg \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x5yr21d.xxtcm4k \u003e div \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x5yr21d.x2lwn1j \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x5yr21d.XeF4bQ \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x5yr21d.xh8yej3.wR20SA \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x5yr21d.xh8yej3.xxtcm4k.wPiurg \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x5yr21d.xdl72j9.xs83m0k.xeuugli.xxtcm4k.MASIRw \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.ywdDjQ \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.xl56j7k \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.xh8yej3.x79p663.xipwfb.keYNXA \u003e div.xe8uvvx.xrvj5dj.xl4xnwh.xh8yej3 \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619 \u003e div._kI3Pw \u003e form \u003e div.xz85gn6.xmkeg23.xb3r6kr.x4893vd.x9f619.awS2cA.qTM_vg.coX0kw.W1rM9w.d68Cig.c6UruA.axMmJA \u003e div.rJPECQ \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.sydfnQ \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619 \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.rOxU6g \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x30g6up \u003e div._kI3Pw \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619 \u003e div.xrvj5dj.x5yr21d \u003e div.xeuugli \u003e div.Ka9auQ \u003e div.aDc6Yg \u003e div.Ka9auQ \u003e div.aDc6Yg \u003e div.xng3xce.xc342km.xe8uvvx.x9dqhi0.x9f619.x30g6up \u003e div.sKNa0Q \u003e textarea.bCVoGQ.aWBg0w._6klkDA.Sp3u_w.Gcy95A.kZyqPQ.aNxFOg",
+    "time_offset_ms": 1841
   }
 ]
